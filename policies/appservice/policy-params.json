@@ -1,0 +1,6 @@
+{
+    "approvedIps": {
+        "type": "Array",
+        "metadata": { "description": "Allowed inbound IP addresses" }
+    }
+}

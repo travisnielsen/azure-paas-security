@@ -1,0 +1,29 @@
+{
+  "if": {
+    "anyOf": [
+      {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Web/sites"
+          },
+          {
+            "anyOf": [
+              {
+                "field": "Microsoft.Web/sites/siteConfig.ipSecurityRestrictions[*].ipAddress",
+                "exists": false
+              },
+              {
+                "not": {
+                  "field": "Microsoft.Web/sites/siteConfig.ipSecurityRestrictions[*].ipAddress",
+                  "in": "[parameters('approvedIps')]"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "then": { "effect": "deny" }
+}

@@ -1,0 +1,93 @@
+@startuml diagram-network
+
+!define AzurePuml https://raw.githubusercontent.com/travisnielsen/Azure-PlantUML/release/3-0/dist
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+
+!includeurl AzurePuml/AzureCommon.puml
+!includeurl AzurePuml/General/ManagementPortal.puml
+!includeurl AzurePuml/Compute/KubernetesServices.puml
+!includeurl AzurePuml/Compute/AppServiceEnvironments.puml
+!includeurl AzurePuml/Compute/FunctionApps.puml
+!includeurl AzurePuml/Compute/VirtualMachine.puml
+!includeurl AzurePuml/Identity/AzureActiveDirectory.puml
+!includeurl AzurePuml/Identity/Users.puml
+!includeurl AzurePuml/ManagementGovernance/NetworkWatcher.puml
+!includeurl AzurePuml/Networking/AzureFirewall.puml
+!includeurl AzurePuml/Networking/Bastion.puml
+!includeurl AzurePuml/Networking/NetworkSecurityGroups.puml
+!includeurl AzurePuml/Networking/PrivateLink.puml
+!includeurl AzurePuml/Networking/PrivateLinkService.puml
+!includeurl AzurePuml/Networking/VirtualNetworks.puml
+!includeurl AzurePuml/Analytics/AzureDatabricks.puml
+!includeurl AzurePuml/Analytics/DataFactory.puml
+!includeurl AzurePuml/Analytics/AzureSynapseAnalytics.puml
+!includeurl AzurePuml/Storage/StorageAccounts.puml
+!includeurl AzurePuml/Security/KeyVault.puml
+!includeurl AzurePuml/Identity/AzureActiveDirectory.puml
+
+LAYOUT_LEFT_RIGHT
+
+TITLE: Network Diagram
+
+skinparam Rectangle {
+    BorderColor<<virtualNetwork>> #7C0A02
+    RectangleBorderThickness<<virtualNetwork>> 0.5
+    BackgroundColor<<subnet>> HoneyDew
+    BorderColor<<subnet>> Green
+    BorderColor<<networkAcls>> #7C0A02
+}
+
+
+VirtualNetworks(vnetHub, "vnet-hub", "10.10.0.0/20") {
+    Rectangle "azfw" <<subnet>> as subFirewall #line.dotted {
+        AzureFirewall(azfw, "Hub Firewall", "", "")
+    }
+}
+
+VirtualNetworks(vnetSpoke, "vnet-spoke", "10.20.0.0/20") {
+    Rectangle "bastion" <<subnet>> as subBastion #line.dotted {
+        Bastion(bastion, "Bastion", "SSH / RDP Proxy", "")
+    }
+
+    Rectangle "util" <<subnet>> as subUtil #line.dotted {
+        VirtualMachine(vm, "Utility Servers", "", "Allow SSH / RDP from Bastion subnet")
+    }
+
+    Rectangle "az-svcs" <<subnet>> as subPrivateLinks #line.dotted {
+        PrivateLink(azsvcLink, "Azure Services", "", "Inbound connections")
+    }
+
+    Rectangle "func-integration" <<subnet>> as subFuncInt #line.dotted {
+        Container(udr, "User Defined Route", "Force egress to hub", "0.0.0.0 to AZFW")
+    }
+}
+
+Users(users, "Admins", "", "")
+AzureActiveDirectory(aad, "Corprate tenant", "", "MFA\nConditional Access")
+ManagementPortal(portal, "Azure Portal", "", "Connect to utility servers")
+users --> aad: "authentication"
+users --> portal
+portal --> bastion: "https"
+
+vnetHub --- vnetSpoke: "VNet Peering"
+
+NetworkWatcher(netWatcher, "Traffic Analytics", "", "")
+NetworkSecurityGroups(nsgs, "Traffic Segmentation", "1 per subnet", "Deny outbound Internet\nExplicit inbound allow")
+
+netWatcher <-- nsgs: "Flow logs"
+nsgs --> subBastion: nsg-bastion
+nsgs --> subUtil: nsg-util
+nsgs --> subPrivateLinks: nsg-services
+nsgs --> subFuncInt: nsg-integration
+
+StorageAccounts(adls, "Data Lake", "Standard SKU", "Customer Data")
+azsvcLink --> adls: "data access"
+
+FunctionApps(functions, "Functions", "Premium Plan", "Private storage account for service (preview)")
+azsvcLink --> functions: "http trigger (inbound)"
+subFuncInt <-- functions: "vnet Integration (outbound)"
+
+DataFactory(datafactory, "Data Processing", "", "ETL jobs")
+azsvcLink <-- datafactory: "data access"
+
+@end
