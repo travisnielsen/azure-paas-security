@@ -8,7 +8,7 @@ This reference design implements a hub-and-spoke networking model with all data 
 
 This reference environment includes two main areas that are deployed in the target subscription.
 
-* [Azure Policies](policies/policies.md) - Ensure a conssitent security baseline is maintained
-* [Azure Infrastructure](deployments/infrastructure.md) - Represents the solution design
+* [Azure Policies](policies/readme.md) - Ensure a conssitent security baseline is maintained
+* [Azure Infrastructure](deployments/readme.md) - Represents the solution design
 
 Navigate to each link before for instructiosn on how these assets are be deployed.
