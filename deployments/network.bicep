@@ -91,6 +91,15 @@ module spokeVNET 'modules/vnet.bicep' = {
         name: 'func-integration'
         properties: {
           addressPrefix: integrationSubnetAddressPrefix
+          delegations: [
+            {
+              name: 'delegation'
+              properties: {
+                serviceName: 'Microsoft.Web/serverfarms'
+              }
+            }
+          ]
+          privateEndpointNetworkPolicies: 'Enabled'
           routeTable: {
             id: route.outputs.id
           }
@@ -360,3 +369,27 @@ module bastion 'modules/bastion.bicep' = {
     subnetId: '${spokeVNET.outputs.id}/subnets/AzureBastionSubnet'
   }
 }
+
+// Private DNS zone for Azure Web Sites (Functions and Web Apps)
+module privateZoneAzureWebsites 'modules/dnszoneprivate.bicep' = {
+  name: 'privatelink-azurewebsites-net'
+  scope: resourceGroup(netrg.name)
+  params: {
+    zoneName: 'privatelink.azurewebsites.net'
+  }
+}
+
+// Link the spoke VNet to the privatelink.azurewebsites.net private zone
+module spokeVnetAzureWebsitesZoneLink 'modules/dnszonelink.bicep' = {
+  name: 'spokevnet-zonelink-azurewebsites'
+  scope: resourceGroup(netrg.name)
+  dependsOn: [
+    privateZoneAzureWebsites
+  ]
+  params: {
+    vnetName: spokeVNET.outputs.name
+    vnetId: spokeVNET.outputs.id
+    zoneName: 'privatelink.azurewebsites.net'
+  }
+}
+
