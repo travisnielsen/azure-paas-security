@@ -2,6 +2,7 @@ param privateEndpointName string
 param subnetId string
 param resourceId string
 param dnsZoneId string
+param groupId string
 
 resource privateEndpoint 'Microsoft.Network/privateEndpoints@2020-06-01' = {
   name: privateEndpointName
@@ -16,7 +17,7 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2020-06-01' = {
         properties: {
           privateLinkServiceId: resourceId
           groupIds: [
-            'sites'
+            groupId
           ]
         }
       }

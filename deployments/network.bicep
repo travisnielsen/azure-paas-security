@@ -393,3 +393,25 @@ module spokeVnetAzureWebsitesZoneLink 'modules/dnszonelink.bicep' = {
   }
 }
 
+// Private DNS zone for Azure Blob Storage (ADLS)
+module privateZoneAzureBlobStorage 'modules/dnszoneprivate.bicep' = {
+  name: 'privatelink-blob-core-windows-net'
+  scope: resourceGroup(netrg.name)
+  params: {
+    zoneName: 'privatelink.blob.core.windows.net'
+  }
+}
+
+// Link the spoke VNet to the privatelink.blob.core.windows.net private zone
+module spokeVnetAzureBlobStorageZoneLink 'modules/dnszonelink.bicep' = {
+  name: 'spokevnet-zonelink-blobstorage'
+  scope: resourceGroup(netrg.name)
+  dependsOn: [
+    privateZoneAzureBlobStorage
+  ]
+  params: {
+    vnetName: spokeVNET.outputs.name
+    vnetId: spokeVNET.outputs.id
+    zoneName: 'privatelink.blob.core.windows.net'
+  }
+}
