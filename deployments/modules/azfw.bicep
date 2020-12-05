@@ -1,5 +1,6 @@
 param prefix string
 param hubId string
+param utilSubnetCidr string
 
 resource publicIp 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
   name: '${prefix}-azfw-ip'
@@ -29,6 +30,35 @@ resource fwl 'Microsoft.Network/azureFirewalls@2020-06-01' = {
           }
         }
       }
+    ]
+    networkRuleCollections: [
+      {
+        name: 'test-collection'
+        properties: {
+          action: {
+            type: 'Allow'
+          }
+          rules: [
+            {
+              description: 'Allow outbound web traffic for util subnet'
+              name: 'util-outbound-all'
+              protocols: [
+                'TCP'
+              ]
+              sourceAddresses: [
+                ''
+              ]
+              destinationAddresses: [
+                '*'
+              ]
+              destinationPorts: [
+                '80,443'
+              ]
+            }
+          ]
+        }
+      }
+
     ]
   }
 }

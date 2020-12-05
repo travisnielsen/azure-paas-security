@@ -1,6 +1,5 @@
 param location string = resourceGroup().location
 param functionRuntime string = 'dotnet'
-
 param appNamePrefix string = uniqueString(resourceGroup().id)
 
 // VNet integration
@@ -9,12 +8,19 @@ param networkRGName string = 'net-rg'
 param vnetName string = 'spoke-vnet'
 param subnetNameIntegration string = 'func-integration'
 param subnetNamePrivEndpoint string = 'az-services'
+param subnetNameUtility string = 'utility'
+
+// Virtual Machine (jump)
+param adminUserName string
+param adminPwd string {
+  secure: true
+}
 
 // Services included in deployment
-var functionAppName = '${appNamePrefix}-functionapp'
-var appServiceName = '${appNamePrefix}-appservice'
-var logAnalyticsName = '${appNamePrefix}-loganalytics'
-var appInsightsName = '${appNamePrefix}-appinsights'
+var functionAppName = '${appNamePrefix}'
+var appServiceName = '${appNamePrefix}'
+var logAnalyticsName = '${appNamePrefix}'
+var appInsightsName = '${appNamePrefix}'
 var storageAccountNameFunc = format('{0}func', replace(appNamePrefix, '-', ''))
 var storageAccountNameData = format('{0}data', replace(appNamePrefix, '-', ''))
 param storageAccountDataContainerName string = 'input'
@@ -25,7 +31,7 @@ var appTags = {
 }
 
 // Storage Account for the Function App
-// TODO: This should be temporary to support setup only. Add automation for this: https://docs.microsoft.com/en-us/azure/azure-functions/functions-networking-options#restrict-your-storage-account-to-a-virtual-network-preview
+// TODO: Add automation for this: https://docs.microsoft.com/en-us/azure/azure-functions/functions-networking-options#restrict-your-storage-account-to-a-virtual-network-preview
 resource storageAccountFunc 'Microsoft.Storage/storageAccounts@2019-06-01' = {
   name: storageAccountNameFunc
   location: location
@@ -277,7 +283,7 @@ resource container 'Microsoft.Storage/storageAccounts/blobServices/containers@20
 }
 
 module adslsPrivateEndpoint 'modules/privateendpoint.bicep' = {
-  name: 'function-privendpoint'
+  name: 'adls-privendpoint'
   dependsOn: [
     storageAccount
   ]
@@ -287,5 +293,16 @@ module adslsPrivateEndpoint 'modules/privateendpoint.bicep' = {
     subnetId: resourceId(subscriptionId, networkRGName, 'Microsoft.Network/virtualNetworks/subnets', vnetName, subnetNamePrivEndpoint )
     dnsZoneId: resourceId(subscriptionId, networkRGName, 'Microsoft.Network/privateDnsZones', 'privatelink.blob.core.windows.net' )
     groupId: 'blob'
+  }
+}
+
+// Virtual Machine
+module vm 'modules/vm-win10.bicep' = {
+  name: appNamePrefix
+  params: {
+    vmName: appNamePrefix
+    subnetId: resourceId(subscriptionId, networkRGName, 'Microsoft.Network/virtualNetworks/subnets', vnetName, subnetNameUtility )
+    adminUserName: adminUserName
+    adminPassword: adminPwd
   }
 }

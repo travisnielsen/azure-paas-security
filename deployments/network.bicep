@@ -70,6 +70,9 @@ module spokeVNET 'modules/vnet.bicep' = {
         name: 'utility'
         properties: {
           addressPrefix: utilSubnetAddressPrefix
+          routeTable: {
+            id: route.outputs.id
+          }
           networkSecurityGroup: {
             id: UtilNsg.outputs.id
           }
@@ -122,9 +125,22 @@ module UtilNsg 'modules/nsg.bicep' = {
     networkWatcherName: networkWatcherName
     securityRules: [
       {
-        name: 'allow-bastion'
+        name: 'allow-hub-all'
         properties: {
           priority: 100
+          protocol: '*'
+          access: 'Allow'
+          direction: 'Outbound'
+          sourceAddressPrefix: '*'
+          sourcePortRange: '*'
+          destinationAddressPrefix: '${HubAzFw.outputs.privateIp}/32'
+          destinationPortRange: '*' 
+        }
+      }
+      {
+        name: 'allow-bastion'
+        properties: {
+          priority: 110
           protocol: '*'
           access: 'Allow'
           direction: 'Inbound'
@@ -325,6 +341,7 @@ module HubAzFw 'modules/azfw.bicep' = {
   params: {
     prefix: 'hub'
     hubId: hubVNET.outputs.id
+    utilSubnetCidr: utilSubnetAddressPrefix
   }
 }
 
