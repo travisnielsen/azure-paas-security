@@ -24,3 +24,4 @@ resource container 'Microsoft.Storage/storageAccounts/blobServices/containers@20
 
 output id string = storageAccount.id
 output name string = storageAccount.name
+output apiVersion string = storageAccount.apiVersion

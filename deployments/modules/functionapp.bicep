@@ -5,6 +5,9 @@ param resourceGroupNameNetwork string
 param vnetName string
 param subnetNameIntegration string
 param subnetNamePrivateEndpoint string
+param storageAccountNameData string
+param storageAccountIdData string
+param storageAccountApiVersionData string
 param appTags object
 
 var subscriptionId = subscription().subscriptionId
@@ -72,6 +75,10 @@ resource functionApp 'Microsoft.Web/sites@2020-06-01' = {
           value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountFunc.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${listKeys(storageAccountFunc.id, storageAccountFunc.apiVersion).keys[0].value}'
         }
         {
+          name: 'StorageAccountData'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountNameData};EndpointSuffix=${environment().suffixes.storage};AccountKey=${listKeys(storageAccountIdData, storageAccountApiVersionData).keys[0].value}'
+        }
+        {
           name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
           value: appInsightsKey
         }
@@ -90,7 +97,7 @@ resource functionApp 'Microsoft.Web/sites@2020-06-01' = {
         {
           name: 'WEBSITE_NODE_DEFAULT_VERSION'
           value: '~12'
-        } 
+        }
       ]
     }
     httpsOnly: true

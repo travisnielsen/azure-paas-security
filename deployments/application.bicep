@@ -100,6 +100,9 @@ module vm 'modules/vm-win10.bicep' = {
 // Function App
 module functionApp 'modules/functionapp.bicep' = {
   name: 'functionApp'
+  dependsOn: [
+    storageAccount
+  ]
   scope: resourceGroup(resourceGroupApp.name)
   params: {
     name: uniqueString(resourceGroupApp.id)
@@ -109,6 +112,9 @@ module functionApp 'modules/functionapp.bicep' = {
     subnetNameIntegration: 'funcintegration'
     subnetNamePrivateEndpoint: 'azureservices'
     workerRuntime: 'node'
+    storageAccountNameData: storageAccount.outputs.name
+    storageAccountIdData: storageAccount.outputs.id
+    storageAccountApiVersionData: storageAccount.outputs.apiVersion
     appTags: tags
   }
 }

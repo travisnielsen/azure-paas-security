@@ -1,0 +1,12 @@
+{
+  "bindings": [
+    {
+      "name": "myBlob",
+      "type": "blobTrigger",
+      "direction": "in",
+      "path": "input/{name}",
+      "connection": "StorageAccountData"
+    }
+  ],
+  "scriptFile": "../dist/processFile/index.js"
+}
