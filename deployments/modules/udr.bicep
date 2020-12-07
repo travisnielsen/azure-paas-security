@@ -1,8 +1,8 @@
-param prefix string
+param name string
 param azFwlIp string
 
 resource route 'Microsoft.Network/routeTables@2020-06-01' = {
-  name: '${prefix}-udr'
+  name: name
   location: resourceGroup().location
   properties: {
     disableBgpRoutePropagation: false

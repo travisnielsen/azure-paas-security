@@ -1,9 +1,9 @@
-param prefix string
+param vnetName string
 param addressSpaces array
 param subnets array
 
 resource vnet 'Microsoft.Network/virtualNetworks@2020-06-01' = {
-  name: '${prefix}-vnet'
+  name: vnetName
   location: resourceGroup().location
   properties: {
     addressSpace: {

@@ -2,6 +2,8 @@ targetScope = 'subscription'
 
 param region string = 'centralus'
 
+param appPrefix string
+
 // SPOKE VNET IP SETTINGS
 param spokeVnetAddressSpace string = '10.20.0.0/20'
 param bastionSubnetAddressPrefix string = '10.20.0.0/26'      // 64 addresses - 10.20.0.0 - 10.20.0.63
@@ -9,22 +11,11 @@ param utilSubnetAddressPrefix string = '10.20.0.64/26'        // 64 addresses - 
 param azServicesSubnetAddressPrefix string = '10.20.1.0/24'    // 256 addresses - 10.20.1.0 - 10.20.1.255
 param integrationSubnetAddressPrefix string = '10.20.2.0/25'  // 128 addresses - 10.20.2.0 - 10.20.2.127
 
-// NSGs
-param bastionNsgName string = 'spoke-nsg-bastion'
-param utilNsgName string = 'spoke-nsg-util'
-param azSvcNsgName string = 'spoke-nsg-azsvc'
-
-// Storage
-param storageAcctName string = 'trnielflowlogs'
-
-// Log Analytics
-param logAnalyticsName string = 'trnielnetanalytics'
-
 // Network Watcher
 param networkWatcherName string = 'NetworkWatcher_centralus'
 
 resource netrg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
-  name: 'net-rg'
+  name: '${appPrefix}-network'
   location: region
 }
 
@@ -32,7 +23,7 @@ module hubVNET 'modules/vnet.bicep' = {
   name: 'hub-vnet'
   scope: resourceGroup(netrg.name)
   params: {
-    prefix: 'hub'
+    vnetName: '${appPrefix}-${region}-hub'
     addressSpaces: [
       '10.10.0.0/20'
     ]
@@ -51,7 +42,7 @@ module spokeVNET 'modules/vnet.bicep' = {
   name: 'spoke-vnet'
   scope: resourceGroup(netrg.name)
   params: {
-    prefix: 'spoke'
+    vnetName: '${appPrefix}-${region}-app'
     addressSpaces: [
       spokeVnetAddressSpace
     ]
@@ -79,7 +70,7 @@ module spokeVNET 'modules/vnet.bicep' = {
         }
       }
       {
-        name: 'az-services'
+        name: 'azureservices'
         properties: {
           addressPrefix: azServicesSubnetAddressPrefix
           routeTable: {
@@ -88,10 +79,11 @@ module spokeVNET 'modules/vnet.bicep' = {
           networkSecurityGroup: {
             id: AzureServicesNsg.outputs.id
           }
+          privateEndpointNetworkPolicies: 'Disabled'
         }
       }
       {
-        name: 'func-integration'
+        name: 'funcintegration'
         properties: {
           addressPrefix: integrationSubnetAddressPrefix
           delegations: [
@@ -118,29 +110,16 @@ module spokeVNET 'modules/vnet.bicep' = {
 
 // NSG for Utility subnet (jump servers)
 module UtilNsg 'modules/nsg.bicep' = {
-  name: utilNsgName
+  name: '${appPrefix}-${region}-app-util'
   scope: resourceGroup(netrg.name)
   params: {
-    name: utilNsgName
+    name: '${appPrefix}-${region}-app-util'
     networkWatcherName: networkWatcherName
     securityRules: [
       {
-        name: 'allow-hub-all'
-        properties: {
-          priority: 100
-          protocol: '*'
-          access: 'Allow'
-          direction: 'Outbound'
-          sourceAddressPrefix: '*'
-          sourcePortRange: '*'
-          destinationAddressPrefix: '${HubAzFw.outputs.privateIp}/32'
-          destinationPortRange: '*' 
-        }
-      }
-      {
         name: 'allow-bastion'
         properties: {
-          priority: 110
+          priority: 100
           protocol: '*'
           access: 'Allow'
           direction: 'Inbound'
@@ -156,7 +135,7 @@ module UtilNsg 'modules/nsg.bicep' = {
       {
         name: 'deny-inbound-default'
         properties: {
-          priority: 200
+          priority: 120
           protocol: '*'
           access: 'Deny'
           direction: 'Inbound'
@@ -166,39 +145,26 @@ module UtilNsg 'modules/nsg.bicep' = {
           destinationPortRange: '*'
         }
       }
-      {
-        name: 'deny-outbound-internet'
-        properties: {
-          priority: 100
-          protocol: '*'
-          access: 'Deny'
-          direction: 'Outbound'
-          sourceAddressPrefix: '*'
-          sourcePortRange: '*'
-          destinationAddressPrefix: 'Internet'
-          destinationPortRange: '*'
-        }
-      }
     ]
   }
 }
 
 // NSG for Bastion subnet
 module BastionNsg 'modules/nsg.bicep' = {
-  name: bastionNsgName
+  name: '${appPrefix}-${region}-app-bastion'
   scope: resourceGroup(netrg.name)
   dependsOn: [
     UtilNsg
   ]
   params: {
-    name: bastionNsgName
+    name: '${appPrefix}-${region}-app-bastion'
     networkWatcherName: networkWatcherName
     securityRules: [
         // SEE: https://docs.microsoft.com/en-us/azure/bastion/bastion-nsg#apply
         {
           name: 'bastion-ingress'
           properties: {
-            priority: 120
+            priority: 100
             protocol: 'Tcp'
             access: 'Allow'
             direction: 'Inbound'
@@ -211,7 +177,7 @@ module BastionNsg 'modules/nsg.bicep' = {
         {
           name: 'bastion-gatewaymgr'
           properties: {
-            priority: 130
+            priority: 120
             protocol: 'Tcp'
             access: 'Allow'
             direction: 'Inbound'
@@ -253,7 +219,7 @@ module BastionNsg 'modules/nsg.bicep' = {
         {
           name: 'allow-azure-dependencies'
           properties: {
-            priority: 110
+            priority: 120
             protocol: '*'
             access: 'Allow'
             direction: 'Outbound'
@@ -266,7 +232,7 @@ module BastionNsg 'modules/nsg.bicep' = {
         {
           name: 'deny-egress'
           properties: {
-            priority: 120
+            priority: 140
             protocol: '*'
             access: 'Deny'
             direction: 'Outbound'
@@ -282,13 +248,13 @@ module BastionNsg 'modules/nsg.bicep' = {
 
 // NSG for Azure services configured with Private Link
 module AzureServicesNsg 'modules/nsg.bicep' = {
-  name: azSvcNsgName
+  name: '${appPrefix}-${region}-app-azsvc'
   scope: resourceGroup(netrg.name)
   dependsOn: [
     BastionNsg
   ]
   params: {
-    name: azSvcNsgName
+    name: '${appPrefix}-${region}-app-azsvc'
     networkWatcherName: networkWatcherName
     securityRules: [
       {
@@ -307,7 +273,7 @@ module AzureServicesNsg 'modules/nsg.bicep' = {
       {
         name: 'deny-inbound-default'
         properties: {
-          priority: 200
+          priority: 120
           protocol: '*'
           access: 'Deny'
           direction: 'Inbound'
@@ -372,7 +338,7 @@ module route 'modules/udr.bicep' = {
   name: 'spoke-udr'
   scope: resourceGroup(netrg.name)
   params: {
-    prefix: 'spoke'
+    name: '${appPrefix}-${region}-app'
     azFwlIp: HubAzFw.outputs.privateIp
   }
 }
@@ -382,7 +348,7 @@ module bastion 'modules/bastion.bicep' = {
   name: 'spoke-bastion'
   scope: resourceGroup(netrg.name)
   params: {
-    prefix: 'spoke'
+    name: '${uniqueString(netrg.id)}-app'
     subnetId: '${spokeVNET.outputs.id}/subnets/AzureBastionSubnet'
   }
 }

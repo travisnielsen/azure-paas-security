@@ -1,9 +1,15 @@
 param vmName string
-param subnetId string
+
+param networkResourceGroupName string
+param vnetName string
+param subnetName string
+
 param adminUserName string
 param adminPassword string {
   secure: true
 }
+
+var subscriptionId = subscription().subscriptionId
 
 param windowsOSVersion string {
   default: 'Desktop 10 Pro'
@@ -42,7 +48,7 @@ resource nInter 'Microsoft.Network/networkInterfaces@2020-06-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: subnetId
+            id: resourceId(subscriptionId, networkResourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', vnetName, subnetName)
           }
         }
       }

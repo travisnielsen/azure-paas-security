@@ -38,6 +38,7 @@ resource fwl 'Microsoft.Network/azureFirewalls@2020-06-01' = {
           action: {
             type: 'Allow'
           }
+          priority: 100
           rules: [
             {
               description: 'Allow outbound web traffic for util subnet'
@@ -46,13 +47,14 @@ resource fwl 'Microsoft.Network/azureFirewalls@2020-06-01' = {
                 'TCP'
               ]
               sourceAddresses: [
-                ''
+                utilSubnetCidr
               ]
               destinationAddresses: [
                 '*'
               ]
               destinationPorts: [
-                '80,443'
+                '80'
+                '443'
               ]
             }
           ]
