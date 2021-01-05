@@ -60,7 +60,7 @@ module storageAccount 'modules/storageaccount.bicep' = {
   scope: resourceGroup(resourceGroupData.name)
   params: {
     accountName: uniqueString(resourceGroupData.id)
-    containerName: 'input'
+    containerName: 'testdata'
     tags: tags
   }
 }
@@ -116,5 +116,31 @@ module functionApp 'modules/functionapp.bicep' = {
     storageAccountIdData: storageAccount.outputs.id
     storageAccountApiVersionData: storageAccount.outputs.apiVersion
     appTags: tags
+  }
+}
+
+// Data Factory
+module adf 'modules/datafactory.bicep' = {
+  name: 'adf'
+  scope: resourceGroup(resourceGroupData.name)
+  params: {
+     adfName: uniqueString(resourceGroupData.id)
+  } 
+}
+
+module dataFactoryPrivateEndpoint 'modules/privateendpoint.bicep' = {
+  name: 'datafactory-privateEndpoint'
+  scope: resourceGroup(resourceGroupData.name)
+  dependsOn: [
+    adf
+  ]
+  params: {
+    privateEndpointName: '${adf.outputs.name}-dataFactoryEndpoint'
+    serviceResourceId: adf.outputs.id
+    resourceGroupNameNetwork: networkResourceGroupName
+    vnetName: vnetName
+    subnetName: 'azureServices'
+    dnsZoneName: 'privatelink.datafactory.azure.net'
+    groupId: 'dataFactory'
   }
 }

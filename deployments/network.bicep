@@ -355,7 +355,7 @@ module bastion 'modules/bastion.bicep' = {
 
 // Private DNS zone for Azure Web Sites (Functions and Web Apps)
 module privateZoneAzureWebsites 'modules/dnszoneprivate.bicep' = {
-  name: 'privatelink-azurewebsites-net'
+  name: 'dns-private-azurewebsites'
   scope: resourceGroup(netrg.name)
   params: {
     zoneName: 'privatelink.azurewebsites.net'
@@ -364,7 +364,7 @@ module privateZoneAzureWebsites 'modules/dnszoneprivate.bicep' = {
 
 // Link the spoke VNet to the privatelink.azurewebsites.net private zone
 module spokeVnetAzureWebsitesZoneLink 'modules/dnszonelink.bicep' = {
-  name: 'spokevnet-zonelink-azurewebsites'
+  name: 'dns-link-azurewebsites-spokevnet'
   scope: resourceGroup(netrg.name)
   dependsOn: [
     privateZoneAzureWebsites
@@ -373,12 +373,13 @@ module spokeVnetAzureWebsitesZoneLink 'modules/dnszonelink.bicep' = {
     vnetName: spokeVNET.outputs.name
     vnetId: spokeVNET.outputs.id
     zoneName: 'privatelink.azurewebsites.net'
+    autoRegistration: false
   }
 }
 
 // Private DNS zone for Azure Blob Storage (ADLS)
 module privateZoneAzureBlobStorage 'modules/dnszoneprivate.bicep' = {
-  name: 'privatelink-blob-core-windows-net'
+  name: 'dns-private-storage-blob'
   scope: resourceGroup(netrg.name)
   params: {
     zoneName: 'privatelink.blob.core.windows.net'
@@ -387,7 +388,7 @@ module privateZoneAzureBlobStorage 'modules/dnszoneprivate.bicep' = {
 
 // Link the spoke VNet to the privatelink.blob.core.windows.net private zone
 module spokeVnetAzureBlobStorageZoneLink 'modules/dnszonelink.bicep' = {
-  name: 'spokevnet-zonelink-blobstorage'
+  name: 'dns-link-blobstorage-spokevnet'
   scope: resourceGroup(netrg.name)
   dependsOn: [
     privateZoneAzureBlobStorage
@@ -396,5 +397,81 @@ module spokeVnetAzureBlobStorageZoneLink 'modules/dnszonelink.bicep' = {
     vnetName: spokeVNET.outputs.name
     vnetId: spokeVNET.outputs.id
     zoneName: 'privatelink.blob.core.windows.net'
+    autoRegistration: false
   }
 }
+
+// Private DNS for Azure Data Factory
+module privateZoneAzureDataFactory 'modules/dnszoneprivate.bicep' = {
+  name: 'dns-private-datafactory'
+  scope: resourceGroup(netrg.name)
+  params: {
+    zoneName: 'privatelink.datafactory.azure.net'
+  }
+}
+
+// Link the spoke VNet to the privatelink.datafactory.azure.net private zone
+module spokeVnetAzureDataFactoryZoneLink 'modules/dnszonelink.bicep' = {
+  name: 'dns-link-datafactory-spokevnet'
+  scope: resourceGroup(netrg.name)
+  dependsOn: [
+    privateZoneAzureDataFactory
+  ]
+  params: {
+    vnetName: spokeVNET.outputs.name
+    vnetId: spokeVNET.outputs.id
+    zoneName: 'privatelink.datafactory.azure.net'
+    autoRegistration: false
+  }
+}
+
+// Private DNS for Synapse SQL
+module privateZoneSynapseSql 'modules/dnszoneprivate.bicep' = {
+  name: 'dns-private-synapse-sql'
+  scope: resourceGroup(netrg.name)
+  params: {
+    zoneName: 'privatelink.sql.azuresynapse.net'
+  }
+}
+
+// Link the spoke VNet to the privatelink.datafactory.azure.net private zone
+module spokeVnetSynapseSqlZoneLink 'modules/dnszonelink.bicep' = {
+  name: 'dns-link-synapsesql-spokevnet'
+  scope: resourceGroup(netrg.name)
+  dependsOn: [
+    privateZoneSynapseSql
+  ]
+  params: {
+    vnetName: spokeVNET.outputs.name
+    vnetId: spokeVNET.outputs.id
+    zoneName: 'privatelink.sql.azuresynapse.net'
+    autoRegistration: false
+  }
+}
+
+// Private DNS zone for other Azure services
+module privateZoneAzure 'modules/dnszoneprivate.bicep' = {
+  name: 'dns-private-azure'
+  scope: resourceGroup(netrg.name)
+  params: {
+    zoneName: 'privatelink.azure.com'
+  }
+}
+
+// Link the spoke VNet to the privatelink.azure.com private zone
+// NOTE: See: https://stackoverflow.com/questions/64725413/azure-bastion-and-private-link-in-the-same-virtual-network-access-to-virtual-ma
+// Must add CNAME record for 'management.privatelink.azure.com' that points to 'arm-frontdoor-prod.trafficmanager.net'
+module spokeVnetAzureZoneLink 'modules/dnszonelink.bicep' = {
+  name: 'dns-link-azure-spokevnet'
+  scope: resourceGroup(netrg.name)
+  dependsOn: [
+    privateZoneAzure
+  ]
+  params: {
+    vnetName: spokeVNET.outputs.name
+    vnetId: spokeVNET.outputs.id
+    zoneName: 'privatelink.azure.com'
+    autoRegistration: false
+  }
+}
+
