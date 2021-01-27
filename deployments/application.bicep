@@ -144,3 +144,22 @@ module dataFactoryPrivateEndpoint 'modules/privateendpoint.bicep' = {
     groupId: 'dataFactory'
   }
 }
+
+// Synapse SQL
+module sqlSynapse 'modules/sql-pool.bicep' = {
+  name: 'sql-dedicatedpool'
+  scope: resourceGroup(resourceGroupData.name)
+  dependsOn: [
+    adf
+  ]
+  params: {
+    serverName: '${uniqueString(resourceGroupData.id)}'
+    sqlPoolName: '${uniqueString(resourceGroupData.id)}db'
+    sqlPoolSKU: 'DW100c'
+    adminLogin: 'sqladmin'
+    adminPwd: vmAdminPwd
+    resourceGroupNameNetwork: networkResourceGroupName
+    vnetNamePrivateEndpoint: vnetName
+    subnetNamePrivateEndpoint: 'azureServices'
+  }
+}

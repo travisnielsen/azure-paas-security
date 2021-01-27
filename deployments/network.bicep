@@ -1,7 +1,6 @@
 targetScope = 'subscription'
 
 param region string = 'centralus'
-
 param appPrefix string
 
 // SPOKE VNET IP SETTINGS
@@ -434,7 +433,7 @@ module privateZoneSynapseSql 'modules/dnszoneprivate.bicep' = {
   }
 }
 
-// Link the spoke VNet to the privatelink.datafactory.azure.net private zone
+// Link the spoke VNet to the privatelink.sql.azuresynapse.net private zone
 module spokeVnetSynapseSqlZoneLink 'modules/dnszonelink.bicep' = {
   name: 'dns-link-synapsesql-spokevnet'
   scope: resourceGroup(netrg.name)
@@ -445,6 +444,30 @@ module spokeVnetSynapseSqlZoneLink 'modules/dnszonelink.bicep' = {
     vnetName: spokeVNET.outputs.name
     vnetId: spokeVNET.outputs.id
     zoneName: 'privatelink.sql.azuresynapse.net'
+    autoRegistration: false
+  }
+}
+
+// Private DNS zone for SQL
+module privateZoneSql 'modules/dnszoneprivate.bicep' = {
+  name: 'dns-private-sql'
+  scope: resourceGroup(netrg.name)
+  params: {
+    zoneName: 'privatelink.database.windows.net'
+  }
+}
+
+// Link the spoke VNet to the privatelink.database.windows.net private zone
+module spokeVnetSqlZoneLink 'modules/dnszonelink.bicep' = {
+  name: 'dns-link-sql-spokevnet'
+  scope: resourceGroup(netrg.name)
+  dependsOn: [
+    privateZoneSql
+  ]
+  params: {
+    vnetName: spokeVNET.outputs.name
+    vnetId: spokeVNET.outputs.id
+    zoneName: 'privatelink.database.windows.net'
     autoRegistration: false
   }
 }
@@ -474,4 +497,3 @@ module spokeVnetAzureZoneLink 'modules/dnszonelink.bicep' = {
     autoRegistration: false
   }
 }
-
