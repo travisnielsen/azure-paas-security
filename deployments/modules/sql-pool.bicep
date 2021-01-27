@@ -15,6 +15,7 @@ resource sqlserver 'Microsoft.Sql/servers@2019-06-01-preview' = {
    administratorLoginPassword: adminPwd
    version: '12.0'
    minimalTlsVersion: '1.2'
+   publicNetworkAccess: 'Disabled'
   }
 }
 

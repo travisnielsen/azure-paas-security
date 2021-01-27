@@ -154,7 +154,7 @@ module sqlSynapse 'modules/sql-pool.bicep' = {
   ]
   params: {
     serverName: '${uniqueString(resourceGroupData.id)}'
-    sqlPoolName: '${uniqueString(resourceGroupData.id)}db'
+    sqlPoolName: 'testdb'
     sqlPoolSKU: 'DW100c'
     adminLogin: 'sqladmin'
     adminPwd: vmAdminPwd
