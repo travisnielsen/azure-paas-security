@@ -146,7 +146,7 @@ module dataFactoryPrivateEndpoint 'modules/privateendpoint.bicep' = {
 }
 
 // Synapse SQL
-module sqlSynapse 'modules/sql-pool.bicep' = {
+module sqlSynapse 'modules/sqlpool.bicep' = {
   name: 'sql-dedicatedpool'
   scope: resourceGroup(resourceGroupData.name)
   dependsOn: [
@@ -161,5 +161,6 @@ module sqlSynapse 'modules/sql-pool.bicep' = {
     resourceGroupNameNetwork: networkResourceGroupName
     vnetNamePrivateEndpoint: vnetName
     subnetNamePrivateEndpoint: 'azureServices'
+    tags: tags
   }
 }
