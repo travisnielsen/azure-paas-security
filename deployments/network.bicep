@@ -51,9 +51,11 @@ module spokeVNET 'modules/vnet.bicep' = {
         name: 'AzureBastionSubnet'
         properties: {
           addressPrefix: bastionSubnetAddressPrefix
+          /*
           networkSecurityGroup: {
             id: BastionNsg.outputs.id
           }
+          */
         }
       }
       {
@@ -66,7 +68,7 @@ module spokeVNET 'modules/vnet.bicep' = {
           networkSecurityGroup: {
             id: UtilNsg.outputs.id
           }
-        }
+        }     
       }
       {
         name: 'azureservices'
@@ -347,7 +349,7 @@ module bastion 'modules/bastion.bicep' = {
   name: 'spoke-bastion'
   scope: resourceGroup(netrg.name)
   params: {
-    name: '${uniqueString(netrg.id)}-app'
+    name: '${uniqueString(netrg.id)}'
     subnetId: '${spokeVNET.outputs.id}/subnets/AzureBastionSubnet'
   }
 }
@@ -481,9 +483,24 @@ module privateZoneAzure 'modules/dnszoneprivate.bicep' = {
   }
 }
 
+
 // Link the spoke VNet to the privatelink.azure.com private zone
 // NOTE: See: https://stackoverflow.com/questions/64725413/azure-bastion-and-private-link-in-the-same-virtual-network-access-to-virtual-ma
 // Must add CNAME record for 'management.privatelink.azure.com' that points to 'arm-frontdoor-prod.trafficmanager.net'
+module frontdoorcname 'modules/dnscname.bicep' = {
+  name: 'frontdoor-cname'
+  scope: resourceGroup(netrg.name)
+  dependsOn: [
+    privateZoneAzure
+  ]
+  params: {
+    appName: 'management'
+    dnsZone: 'privatelink.azure.com'
+    alias: 'arm-frontdoor-prod.trafficmanager.net'
+  }
+}
+
+
 module spokeVnetAzureZoneLink 'modules/dnszonelink.bicep' = {
   name: 'dns-link-azure-spokevnet'
   scope: resourceGroup(netrg.name)
@@ -497,3 +514,4 @@ module spokeVnetAzureZoneLink 'modules/dnszonelink.bicep' = {
     autoRegistration: false
   }
 }
+

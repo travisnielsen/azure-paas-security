@@ -2,7 +2,7 @@ param name string
 param subnetId string
 
 resource bastionIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
-  name: '${name}-bastion'
+  name: '${name}'
   location: resourceGroup().location
   properties: {
     publicIPAddressVersion: 'IPv4'

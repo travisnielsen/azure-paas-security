@@ -56,7 +56,7 @@ resource nInter 'Microsoft.Network/networkInterfaces@2020-06-01' = {
   }
 }
 
-resource VM 'Microsoft.Compute/virtualMachines@2020-06-01' = {
+resource vm 'Microsoft.Compute/virtualMachines@2020-06-01' = {
   name: vmName
   location: location
   properties: {
@@ -72,7 +72,7 @@ resource VM 'Microsoft.Compute/virtualMachines@2020-06-01' = {
       imageReference: {
         publisher: 'MicrosoftWindowsDesktop'
         offer: 'Windows-10'
-        sku: '19h2-ent'
+        sku: '20h2-pro'
         version: 'latest'
       }
       osDisk: {
@@ -103,4 +103,21 @@ resource VM 'Microsoft.Compute/virtualMachines@2020-06-01' = {
   }
 }
 
-output vmId string = VM.id
+/*
+resource aadextension 'Microsoft.Compute/virtualMachines/extensions@2020-06-01' = {
+  name: '${vm.name}/AADLoginForWindows'
+  location: location
+  dependsOn: [
+    vm
+  ]
+  properties: {
+    publisher: 'Microsoft.Azure.ActiveDirectory'
+    type: 'AADLoginForWindows'
+    typeHandlerVersion: ''
+    autoUpgradeMinorVersion: true
+
+  }
+}
+*/
+
+output vmId string = vm.id

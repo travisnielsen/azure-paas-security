@@ -26,6 +26,16 @@ resource sqlserver 'Microsoft.Sql/servers@2019-06-01-preview' = {
   }
 }
 
+resource securityAlertsPolicy 'Microsoft.Sql/servers/securityAlertPolicies@2020-02-02-preview' = {
+  name: '${sqlserver.name}/Default'
+  dependsOn: [
+    sqlserver
+  ]
+  properties: {
+    state: 'Enabled'
+  }
+}
+
 resource auditstorage 'Microsoft.Storage/storageAccounts@2019-06-01' = {
   name: '${serverName}audit'
   location: resourceGroup().location
@@ -87,6 +97,7 @@ resource azuredefender 'Microsoft.Sql/servers/vulnerabilityAssessments@2018-06-0
   name: '${sqlserver.name}/DefaultAssesment'
   dependsOn: [
     roleassignment
+    securityAlertsPolicy
   ]
   properties: {
     storageContainerPath: '${auditstorage.properties.primaryEndpoints.blob}defender'
