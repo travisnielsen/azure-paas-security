@@ -1,8 +1,9 @@
 param serverName string
 param sqlPoolName string
 param sqlPoolSKU string
-param adminLogin string
-param adminPwd string
+param adminLoginName string
+param adminLoginPwd string
+param adminObjectId string
 param resourceGroupNameNetwork string
 param vnetNamePrivateEndpoint string
 param subnetNamePrivateEndpoint string
@@ -18,12 +19,26 @@ resource sqlserver 'Microsoft.Sql/servers@2019-06-01-preview' = {
     type: 'SystemAssigned'
   }
   properties: {
-   administratorLogin: adminLogin
-   administratorLoginPassword: adminPwd
-   version: '12.0'
-   minimalTlsVersion: '1.2'
-   publicNetworkAccess: 'Disabled'
+    administratorLogin: 'sqladmin'
+    administratorLoginPassword: adminLoginPwd
+    version: '12.0'
+    minimalTlsVersion: '1.2'
+    publicNetworkAccess: 'Disabled'
   }
+}
+
+resource sqladmin 'Microsoft.Sql/servers/administrators@2019-06-01-preview' = {
+  name: '${sqlserver.name}/ActiveDirectory'
+  dependsOn: [
+    sqlserver
+  ]
+  properties: {
+    administratorType: 'ActiveDirectory'
+    login: adminLoginName
+    sid: adminObjectId
+    tenantId: subscription().tenantId
+  }
+
 }
 
 resource securityAlertsPolicy 'Microsoft.Sql/servers/securityAlertPolicies@2020-02-02-preview' = {
@@ -124,7 +139,6 @@ resource sqldb 'Microsoft.Sql/servers/databases@2020-08-01-preview' = {
   }
   properties: {
     collation: 'SQL_Latin1_General_CP1_CI_AS'
-    sampleName: 'AdventureWorksLT'
   }
 }
 

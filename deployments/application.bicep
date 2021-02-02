@@ -8,15 +8,22 @@ param vmAdminPwd string {
   secure: true
 }
 
+param tags object
+
+param sqlAdminLoginName string
+param sqlAdminObjectId string
+
 // VNet integration
 var subscriptionId = subscription().subscriptionId
 var networkResourceGroupName = '${appPrefix}-network'
 var vnetName = '${appPrefix}-${region}-app'
 
+/*
 var tags = {
   AppID: 'paasdemo'
   CostCenter: 'abc123'
 }
+*/
 
 resource resourceGroupUtil 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: '${appPrefix}-util'
@@ -156,8 +163,9 @@ module sqlSynapse 'modules/sqlpool.bicep' = {
     serverName: '${uniqueString(resourceGroupData.id)}'
     sqlPoolName: 'testdb'
     sqlPoolSKU: 'DW100c'
-    adminLogin: 'sqladmin'
-    adminPwd: vmAdminPwd
+    adminLoginName: sqlAdminLoginName
+    adminLoginPwd: vmAdminPwd
+    adminObjectId: sqlAdminObjectId
     resourceGroupNameNetwork: networkResourceGroupName
     vnetNamePrivateEndpoint: vnetName
     subnetNamePrivateEndpoint: 'azureServices'
