@@ -1,10 +1,9 @@
 param name string
 param logAnalyticsId string
 param tags object
-param actionGroupName string
+param actionGroupId string
 
 var responseTime = 3
-var actionGroupResourceId = resourceId('Microsoft.Insights/actionGroups', actionGroupName)
 
 resource appInsights 'Microsoft.Insights/components@2020-02-02-preview' = {
   name: name
@@ -47,7 +46,7 @@ resource serverExceptions 'Microsoft.Insights/metricAlerts@2018-03-01' = {
     }
     actions: [
       {
-        actionGroupId: actionGroupResourceId
+        actionGroupId: actionGroupId
       }
     ]
   }
@@ -81,7 +80,7 @@ resource failedRequests 'Microsoft.Insights/metricAlerts@2018-03-01' = {
     }
     actions: [
       {
-        actionGroupId: actionGroupResourceId
+        actionGroupId: actionGroupId
       }
     ]
   }
@@ -115,7 +114,7 @@ resource serverResponseTime 'Microsoft.Insights/metricAlerts@2018-03-01' = {
     }
     actions: [
       {
-        actionGroupId: actionGroupResourceId
+        actionGroupId: actionGroupId
       }
     ]
   }
