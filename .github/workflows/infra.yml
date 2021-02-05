@@ -9,6 +9,9 @@ env:
 on:
   issue_comment:
     types: [ created, edited ]
+  pull_request:
+      branches:
+        - main
 
 jobs:
   deploy:
@@ -58,8 +61,15 @@ jobs:
       with:
         azPSVersion: latest
         inlineScript: |
-          Get-AzContext
-          New-AzResourceGroupDeployment -TemplateFile ./deployments/application.json -ResourceGroupName '${{ env.APP_PREFIX }}-RG' -vmAdminPassword ${{ secrets.VM_ADMIN_PASSWORD }}
+          $additionalParams = @{
+            "vmAdminPassword" = "${{ secrets.VM_ADMIN_PASSWORD }}"
+          }
+
+          Write-Verbose "Deploying..."
+          New-AzResourceGroupDeployment -TemplateFile ./deployments/application.json `
+              -ResourceGroupName '${{ env.APP_PREFIX }}-RG' `
+              -TemplateParameterObject @additionalParams `
+              -Verbose
 
     - name: Create completed comment
       uses: peter-evans/create-or-update-comment@v1
