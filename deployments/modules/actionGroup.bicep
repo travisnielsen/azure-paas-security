@@ -18,4 +18,5 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2018-03-01' = {
   }
 }
 
+output actionGroupName string = actionGroup.name
 output actionGroupId string = actionGroup.id
