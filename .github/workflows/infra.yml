@@ -34,7 +34,8 @@ jobs:
     # Transpile bicep file into ARM template
     - name: Build ARM Template from bicep file
       run: |
-        bicep build ../../deployments/application.bicep
+        ls
+        bicep build "./deployments/application.bicep"
 
     - name: Create starting comment
       uses: peter-evans/create-or-update-comment@v1
@@ -53,11 +54,11 @@ jobs:
 
     # Deploy template
     - name: Deploy template
-      uses: azure/CLI@v1
+      uses: azure/powershell@v1
       with:
         inlineScript: |
-          az account show
-          New-AzResourceGroupDeployment -TemplateFile ../../deployments/application.json -TemplateParameterFile ../../deployments/parameters.json -ResourceGroupName '${{ env.APP_PREFIX }}-RG' -vmAdminPassword ${{ secrets.VM_ADMIN_PASSWORD }}
+          Get-AzContext
+          New-AzResourceGroupDeployment -TemplateFile ./deployments/application.json -TemplateParameterFile ./deployments/parameters.json -ResourceGroupName '${{ env.APP_PREFIX }}-RG' -vmAdminPassword ${{ secrets.VM_ADMIN_PASSWORD }}
 
     - name: Create completed comment
       uses: peter-evans/create-or-update-comment@v1
