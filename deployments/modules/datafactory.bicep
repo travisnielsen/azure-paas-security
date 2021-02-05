@@ -1,8 +1,6 @@
 param adfName string
 param actionGroupId string
 
-var actionGroupResourceId = resourceId('Microsoft.Insights/actionGroups', actionGroupName)
-
 resource dataFactory 'Microsoft.DataFactory/factories@2018-06-01' = {
   name: adfName
   location: resourceGroup().location
