@@ -52,12 +52,12 @@ jobs:
         enable-AzPSSession: true
 
     # Deploy template
-      - name: Deploy template
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            az account show
-            New-AzResourceGroupDeployment -TemplateFile ../../deployments/application.json -TemplateParameterFile ../../deployments/parameters.json -ResourceGroupName '${{ env.APP_PREFIX }}-RG' -vmAdminPassword ${{ secrets.VM_ADMIN_PASSWORD }}
+    - name: Deploy template
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          az account show
+          New-AzResourceGroupDeployment -TemplateFile ../../deployments/application.json -TemplateParameterFile ../../deployments/parameters.json -ResourceGroupName '${{ env.APP_PREFIX }}-RG' -vmAdminPassword ${{ secrets.VM_ADMIN_PASSWORD }}
 
     - name: Create completed comment
       uses: peter-evans/create-or-update-comment@v1
