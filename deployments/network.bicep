@@ -130,7 +130,7 @@ module UtilNsg 'modules/nsg.bicep' = {
           destinationPortRanges: [
             '22'
             '3389'
-          ] 
+          ]
         }
       }
       {

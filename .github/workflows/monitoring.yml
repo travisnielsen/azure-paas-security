@@ -1,0 +1,59 @@
+name: monitoring-DEPLOY
+
+env:
+  SUBSCRIPTION_ID:
+  RESOURCE_GROUP: WBADemo-RG
+  LOCATION: westus2
+  ACTION_GROUP: WBADemoAdmin
+
+on:
+  issue_comment:
+    types: [ created, edited ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: contains(github.event.comment.body, '/deploy-monitor:')
+
+    steps:
+    # checkout - remember we have to check out the PR code!
+    - uses: actions/checkout@v2
+    - name: Checkout PR code
+      uses: dawidd6/action-checkout-pr@v1
+      with:
+        pr: ${{ github.event.issue.number }}
+
+    - name: "Set env variables from chat message"
+      run: |
+        pattern="^\/deploy\:(\w+)$"
+        [[ "${{ github.event.comment.body }}" =~ $pattern ]]
+
+    - name: Create starting comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.issue.number }}
+        body: |
+          Hey, @${{ github.event.comment.user.login }}!
+          :rocket: Deploying monitoring to ${{ env.RESOURCE_GROUP }} is beginning! :rocket:
+
+    - name: 'Login via Az module'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        enable-AzPSSession: true
+
+    # - name: Run Azure PowerShell script
+    #   uses: azure/powershell@v1
+    #   with:
+    #     azPSVersion: '3.1.0'
+    #     inlineScript: monitoring/Deploy-AzMonitoring.ps1 -SubscriptionId '${{ env.SUBSCRIPTION_ID }}' -ActionGroupName '${{ env.ACTION_GROUP }}'  -ResourceGroupName '${{ env.RESOURCE_GROUP }}' -Location '${{ env.LOCATION }}'
+
+    - name: Create completed comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.issue.number }}
+        body: |
+          Hey, @${{ github.event.comment.user.login }}!
+          :tada: Monitoring deployment to ${{ env.RESOURCE_GROUP }} completed! :tada:
