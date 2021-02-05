@@ -65,13 +65,13 @@ jobs:
         azPSVersion: latest
         inlineScript: |
           $additionalParams = @{
-            "vmAdminPassword" = "${{ secrets.VM_ADMIN_PASSWORD }}"
+            vmAdminPassword = "${{ secrets.VM_ADMIN_PASSWORD }}"
           }
 
           Write-Verbose "Deploying..."
           New-AzResourceGroupDeployment -TemplateFile ./deployments/application.json `
               -ResourceGroupName '${{ env.APP_PREFIX }}-RG' `
-              -TemplateParameterObject @additionalParams `
+              -TemplateParameterObject $additionalParams `
               -Verbose
 
     - name: Create completed comment
