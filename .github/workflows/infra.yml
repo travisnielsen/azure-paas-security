@@ -84,8 +84,8 @@ jobs:
           }
 
           Write-Verbose "Deploying..."
-          New-AzResourceGroupDeployment -TemplateFile ./deployments/application.json `
-              -ResourceGroupName '${{ env.APP_PREFIX }}-RG' `
+          New-AzDeployment -TemplateFile ./deployments/application.json `
+              -Location '${{ env.LOCATION }}' `
               -TemplateParameterObject $additionalParams `
               -Verbose
 
