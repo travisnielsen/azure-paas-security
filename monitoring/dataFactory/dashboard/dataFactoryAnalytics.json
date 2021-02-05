@@ -23,6 +23,7 @@
         },
         "DiagnosticsWorkspaceSubscription": {
             "type": "string",
+            "defaultValue": "[subscription().subscriptionId]",
             "metadata": {
                 "description": "Provide the workspace subscription GUID for your Network Diagnostic logs"
             }
@@ -67,5 +68,5 @@
         "value": "[resourceId( 'microsoft.insights/workbooks', parameters('workbookId'))]"
       }
     },
-    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#"
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#"
   }

@@ -93,7 +93,7 @@ resource roleassignment 'Microsoft.Authorization/roleAssignments@2020-04-01-prev
     principalId: sqlserver.identity.principalId
     principalType: 'ServicePrincipal'
   }
-} 
+}
 
 resource auditsettings 'Microsoft.Sql/servers/auditingSettings@2017-03-01-preview' = {
   name: '${sqlserver.name}/DefaultAuditSettings'

@@ -1,0 +1,69 @@
+name: Infra-DEPLOY
+
+env:
+  LOCATION: centralus
+  ACTION_GROUP_NAME: WBADemoAdmin
+  APP_PREFIX: wbademo
+  SQL_ADMIN_OBJECT_ID: da40d0a0-5874-4dfa-885d-f56d0c9b674b
+
+on:
+  issue_comment:
+    types: [ created, edited ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: contains(github.event.comment.body, '/infra')
+
+    steps:
+    # checkout - remember we have to check out the PR code!
+    - uses: actions/checkout@v2
+    - name: Checkout PR code
+      uses: dawidd6/action-checkout-pr@v1
+      with:
+        pr: ${{ github.event.issue.number }}
+
+    # Install the latest release of the bicep CLI
+    - name: Install bicep CLI
+      run: |
+        curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+        chmod +x ./bicep
+        sudo mv ./bicep /usr/local/bin/bicep
+        bicep --help
+
+    # Transpile bicep file into ARM template
+    - name: Build ARM Template from bicep file
+      run: |
+        bicep build ../../deployments/application.bicep
+
+    - name: Create starting comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        token: ${{ secrets.TOKEN }}
+        issue-number: ${{ github.event.issue.number }}
+        body: |
+          Hey, @${{ github.event.comment.user.login }}!
+          :rocket: Deploying infra to '${{ env.APP_PREFIX }}-RG' is beginning! :rocket:
+
+    - name: 'Login via Az module'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        enable-AzPSSession: true
+
+    # Deploy template
+      - name: Deploy template
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az account show
+            New-AzResourceGroupDeployment -TemplateFile ../../deployments/application.json -TemplateParameterFile ../../deployments/parameters.json -ResourceGroupName '${{ env.APP_PREFIX }}-RG' -vmAdminPassword ${{ secrets.VM_ADMIN_PASSWORD }}
+
+    - name: Create completed comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        token: ${{ secrets.TOKEN }}
+        issue-number: ${{ github.event.issue.number }}
+        body: |
+          Hey, @${{ github.event.comment.user.login }}!
+          :tada: Infra deployment to '${{ env.APP_PREFIX }}-RG' completed! :tada:

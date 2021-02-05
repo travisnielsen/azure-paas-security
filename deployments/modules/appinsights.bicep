@@ -1,6 +1,7 @@
 param name string
 param logAnalyticsId string
 param tags object
+param actionGroupName string
 
 resource appInsights 'Microsoft.Insights/components@2020-02-02-preview' = {
   name: name
@@ -13,6 +14,110 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02-preview' = {
     publicNetworkAccessForQuery: 'Enabled'
   }
   tags: tags
+}
+
+var responseTime = 3
+
+resource serverExceptions 'Microsoft.Insights/metricAlerts@2018-03-01' = {
+  name: 'serverExceptions'
+  location: 'global'
+  properties: {
+    description: 'send alerts for Server exceptions'
+    severity: 4
+    enabled: true
+    scopes: [
+      resourceId('Microsoft.Insights/components', appInsights.name)
+    ]
+    evaluationFrequency: 'PT1M'
+    windowSize: 'PT5M'
+    criteria: {
+      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+      allOf: [
+        {
+          name: 'Metric3'
+          dimensions: []
+          metricName: 'exceptions/server'
+          operator: 'GreaterThan'
+          threshold: responseTime
+          timeAggregation: 'Average'
+          criterionType: 'StaticThresholdCriterion'
+        }
+      ]
+    }
+    actions: [
+      {
+        actionGroupId: resourceId('microsoft.insights/actionGroups', actionGroupName)
+      }
+    ]
+  }
+}
+
+resource failedRequests 'Microsoft.Insights/metricAlerts@2018-03-01' = {
+  name: 'failedRequests'
+  location: 'global'
+  properties: {
+    description: 'send alerts for Failed Requests'
+    severity: 4
+    enabled: true
+    scopes: [
+      resourceId('Microsoft.Insights/components', appInsights.name)
+    ]
+    evaluationFrequency: 'PT1M'
+    windowSize: 'PT5M'
+    criteria: {
+      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+      allOf: [
+        {
+          name: 'Metric2'
+          dimensions: []
+          metricName: 'requests/failed'
+          operator: 'GreaterThan'
+          threshold: responseTime
+          timeAggregation: 'Average'
+          criterionType: 'StaticThresholdCriterion'
+        }
+      ]
+    }
+    actions: [
+      {
+        actionGroupId: resourceId('microsoft.insights/actionGroups', actionGroupName)
+      }
+    ]
+  }
+}
+
+resource serverResponseTime 'Microsoft.Insights/metricAlerts@2018-03-01' = {
+  name: 'serverResponseTime'
+  location: 'global'
+  properties: {
+    description: 'response time alert'
+    severity: 4
+    enabled: true
+    scopes: [
+      resourceId('Microsoft.Insights/components', appInsights.name)
+    ]
+    evaluationFrequency: 'PT1M'
+    windowSize: 'PT5M'
+    criteria: {
+      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+      allOf: [
+        {
+          name: 'Metric1'
+          metricName: 'requests/duration'
+          operator: 'GreaterThan'
+          dimensions: []
+          threshold: responseTime
+          timeAggregation: 'Average'
+          criterionType: 'StaticThresholdCriterion'
+        }
+      ]
+    }
+    actions: [
+      {
+        actionGroupId: resourceId('microsoft.insights/actionGroups', actionGroupName)
+      }
+    ]
+  }
 }
 
 output id string = appInsights.id
