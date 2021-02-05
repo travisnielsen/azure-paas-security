@@ -48,29 +48,24 @@ jobs:
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-        #enable-AzPSSession: true
+        enable-AzPSSession: true
 
-    # - name: Run Azure PowerShell script
-    #   uses: azure/powershell@v1
-    #   with:
-    #     azPSVersion: 'latest'
-    #     inlineScript: monitoring/Deploy-AzMonitoring.ps1 -SubscriptionId '${{ env.SUBSCRIPTION_ID }}' -ActionGroupName '${{ env.ACTION_GROUP }}'  -ResourceGroupName ''${{ env.APP_PREFIX }}-RG'' -Location '${{ env.LOCATION }}'
-    # Emit template what-if to show what template will do
-
-    - name: Run what-if
-      uses: azure/CLI@v1
-      with:
-        inlineScript: |
-          az account show
-          az deployment group what-if -f ../../deployments/network.json -p ../../deployments/network.parameters.json -g '${{ env.APP_PREFIX }}-RG'
-
-  # Deploy template
+    # Deploy template
     - name: Deploy template
-      uses: azure/CLI@v1
+      uses: azure/powershell@v1
       with:
+        azPSVersion: latest
         inlineScript: |
-          az account show
-          az deployment group create -f ../../deployments/network.json -p ../../deployments/network.parameters.json -g '${{ env.APP_PREFIX }}-RG'
+          # deploy infra resources
+          $additionalParams = @{
+            appPrefix = "${{ env.APP_PREFIX }}"
+          }
+          
+          Write-Verbose "Deploying..."
+          New-AzDeployment -TemplateFile ./deployments/application.json `
+              -Location '${{ env.LOCATION }}' `
+              -TemplateParameterObject $additionalParams `
+              -Verbose
 
     - name: Create completed comment
       uses: peter-evans/create-or-update-comment@v1
