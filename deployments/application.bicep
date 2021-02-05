@@ -27,6 +27,7 @@ var tags = {
 }
 */
 
+// Create Resource Groups
 resource resourceGroupUtil 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: '${appPrefix}-util'
   location: region
@@ -50,6 +51,9 @@ module logAnalytics 'modules/loganalytics.bicep' = {
     name: uniqueString(resourceGroupApp.id)
     appTags: tags
   }
+  dependsOn:[
+    resourceGroupApp
+  ]
 }
 
 // Deploy Action Group for monitoring/alerting
@@ -69,7 +73,7 @@ module appInsights 'modules/appinsights.bicep' = {
   params: {
     name: uniqueString(resourceGroupApp.id)
     logAnalyticsId: logAnalytics.outputs.id
-    actionGroupId: actionGroup.actionGroupId
+    actionGroupName: actionGroup.name
     tags: tags
   }
 }
@@ -145,7 +149,7 @@ module adf 'modules/datafactory.bicep' = {
   scope: resourceGroup(resourceGroupData.name)
   params: {
      adfName: uniqueString(resourceGroupData.id)
-     actionGroupId: actionGroup.actionGroupId
+     actionGroupName: actionGroup.name
   }
 }
 
