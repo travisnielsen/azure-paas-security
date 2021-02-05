@@ -6,19 +6,19 @@ Deploys monitoring - alerts and dashboard for resources
 Deploys monitoring - alerts and dashboard for resources
 
 .PARAMETER SubscriptionId
-The event grid data content recieved on resource modification
+The guid of deployment subscription
 
 .PARAMETER ResourceGroupName
-The event grid data content recieved on resource modification
+The resource group where all deployments will reside
 
 .PARAMETER Location
-The event grid data content recieved on resource modification
+The deployment region
 
 .PARAMETER ActionGroupName
-The event grid data content recieved on resource modification
+The name of the action group for notifications/alerting purposes
 
 .EXAMPLE
-Deploy-AzMonitoring -WorkspaceSubscriptionId <1111-2222-44444> -WorkspaceResourceGroupName <some-name-rg> -WorkspaceName <some-name> -ParameterFilePath </path/to/param>
+Deploy-AzMonitoring -SubscriptionId <1111-2222-44444> -ResourceGroupName <some-name-rg> -Location <some-region> -ActionGroupName <some-action-name>
 
 .NOTES
 Deploy using ARM templates
@@ -42,8 +42,8 @@ function Deploy-AzMonitoring {
         [string] $ActionGroupName
     )
 
-    # Toek replacement extension in ADO will replace all parameter values automatically
-    # Deployment will reference parameter file during deployment
+    # Token replacement extension in ADO will replace all parameter values automatically
+    # Deployment will reference parameter files for each alert/dashboard
 
     begin {
         Write-Debug ("[{0} entered]" -f $MyInvocation.MyCommand)
@@ -74,6 +74,8 @@ function Deploy-AzMonitoring {
             Write-Verbose "Successfully deployed action group" -Verbose
         }
         #endregion action group
+
+        Write-Verbose 'Starting alerts/dashboard deployments...' -Verbose
 
         #region Get all prameters and print
 		$param = ConvertFrom-Json (Get-Content -Raw -Path $parameterFilePath)
