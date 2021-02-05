@@ -2,7 +2,6 @@ name: Network-DEPLOY
 
 env:
   LOCATION: centralus
-  ACTION_GROUP: WBADemoAdmin
   APP_PREFIX: wbademo
 
 on:
@@ -33,7 +32,7 @@ jobs:
     # Transpile bicep file into ARM template
     - name: Build ARM Template from bicep file
       run: |
-        bicep build ../../deployments/network.bicep
+        bicep build ./deployments/application.bicep
 
     - name: Create starting comment
       uses: peter-evans/create-or-update-comment@v1
@@ -42,7 +41,7 @@ jobs:
         issue-number: ${{ github.event.issue.number }}
         body: |
           Hey, @${{ github.event.comment.user.login }}!
-          :rocket: Deploying infra to '${{ env.APP_PREFIX }}-RG' is beginning! :rocket:
+          :rocket: Deploying network is beginning! :rocket:
 
     - name: 'Login via Az module'
       uses: azure/login@v1
@@ -74,4 +73,4 @@ jobs:
         issue-number: ${{ github.event.issue.number }}
         body: |
           Hey, @${{ github.event.comment.user.login }}!
-          :tada: Infra deployment to '${{ env.APP_PREFIX }}-RG' completed! :tada:
+          :tada: Network deployment completed! :tada:
