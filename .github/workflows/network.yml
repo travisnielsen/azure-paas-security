@@ -32,7 +32,7 @@ jobs:
     # Transpile bicep file into ARM template
     - name: Build ARM Template from bicep file
       run: |
-        bicep build ./deployments/application.bicep
+        bicep build ./deployments/network.bicep
 
     - name: Create starting comment
       uses: peter-evans/create-or-update-comment@v1
