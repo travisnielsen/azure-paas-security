@@ -145,7 +145,7 @@ module adf 'modules/datafactory.bicep' = {
   scope: resourceGroup(resourceGroupData.name)
   params: {
      adfName: uniqueString(resourceGroupData.id)
-     actionGroupName: actionGroupName
+     actionGroupName: actionGroup.name
   }
 }
 
