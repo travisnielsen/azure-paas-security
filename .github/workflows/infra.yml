@@ -64,18 +64,6 @@ jobs:
       with:
         azPSVersion: latest
         inlineScript: |
-          # Check deployment RG exists
-          $rgExists = Get-AzResourceGroup -Name '${{ env.APP_PREFIX }}-RG' -ErrorAction SilentlyContinue
-
-          if ($null -eq $rgExists) {
-            Write-Verbose "Deployment ResourceGrup does not exist... creating"
-
-            New-AzResourceGroup -Name '${{ env.APP_PREFIX }}-RG' -Location '${{ env.LOCATION }}'
-          }
-          else {
-            Write-Verbose "Resource Group already exists"
-          }
-
           # deploy infra resources
           $additionalParams = @{
             appPrefix        = "${{ env.APP_PREFIX }}"
