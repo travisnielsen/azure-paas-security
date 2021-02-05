@@ -64,13 +64,13 @@ jobs:
           az account show
           az deployment group what-if -f ../../deployments/network.json -p ../../deployments/network.parameters.json -g '${{ env.APP_PREFIX }}-RG'
 
-    # Deploy template
-      - name: Deploy template
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            az account show
-            az deployment group create -f ../../deployments/network.json -p ../../deployments/network.parameters.json -g '${{ env.APP_PREFIX }}-RG'
+  # Deploy template
+    - name: Deploy template
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          az account show
+          az deployment group create -f ../../deployments/network.json -p ../../deployments/network.parameters.json -g '${{ env.APP_PREFIX }}-RG'
 
     - name: Create completed comment
       uses: peter-evans/create-or-update-comment@v1
