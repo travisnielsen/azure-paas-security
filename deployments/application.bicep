@@ -61,26 +61,30 @@ module appInsights 'modules/appinsights.bicep' = {
   }
 }
 
-// Storage account for data
-module storageAccount 'modules/storageaccount.bicep' = {
-  name: 'storageAccount'
+var storageAccountName = uniqueString(resourceGroupData.id)
+var dataFactoryName = uniqueString(resourceGroupData.id)
+
+module dataTier 'modules/datatier.bicep' = {
+  name: 'dataTier'
   scope: resourceGroup(resourceGroupData.name)
   params: {
-    accountName: uniqueString(resourceGroupData.id)
-    containerName: 'testdata'
+    storageAccountName: storageAccountName
+    storageContainerName: 'testdata'
+    adfName: uniqueString(resourceGroupData.id)
     tags: tags
   }
+
 }
 
 module storagePrivateEndpoint 'modules/privateendpoint.bicep' = {
   name: 'storageAccount-privateEndpoint'
   scope: resourceGroup(resourceGroupData.name)
   dependsOn: [
-    storageAccount
+    dataTier
   ]
   params: {
-    privateEndpointName: '${storageAccount.outputs.name}-storageEndpoint'
-    serviceResourceId: storageAccount.outputs.id
+    privateEndpointName: '${storageAccountName}-storageEndpoint'
+    serviceResourceId: dataTier.outputs.storageAccountId
     resourceGroupNameNetwork: networkResourceGroupName
     vnetName: vnetName
     subnetName: 'azureServices'
@@ -104,46 +108,15 @@ module vm 'modules/vm-win10.bicep' = {
   }
 }
 
-// Function App
-module functionApp 'modules/functionapp.bicep' = {
-  name: 'functionApp'
-  dependsOn: [
-    storageAccount
-  ]
-  scope: resourceGroup(resourceGroupApp.name)
-  params: {
-    name: uniqueString(resourceGroupApp.id)
-    appInsightsKey: appInsights.outputs.key
-    resourceGroupNameNetwork: networkResourceGroupName
-    vnetName: vnetName
-    subnetNameIntegration: 'funcintegration'
-    subnetNamePrivateEndpoint: 'azureservices'
-    workerRuntime: 'node'
-    storageAccountNameData: storageAccount.outputs.name
-    storageAccountIdData: storageAccount.outputs.id
-    storageAccountApiVersionData: storageAccount.outputs.apiVersion
-    appTags: tags
-  }
-}
-
-// Data Factory
-module adf 'modules/datafactory.bicep' = {
-  name: 'adf'
-  scope: resourceGroup(resourceGroupData.name)
-  params: {
-     adfName: uniqueString(resourceGroupData.id)
-  } 
-}
-
 module dataFactoryPrivateEndpoint 'modules/privateendpoint.bicep' = {
   name: 'datafactory-privateEndpoint'
   scope: resourceGroup(resourceGroupData.name)
   dependsOn: [
-    adf
+    dataTier
   ]
   params: {
-    privateEndpointName: '${adf.outputs.name}-dataFactoryEndpoint'
-    serviceResourceId: adf.outputs.id
+    privateEndpointName: '${dataFactoryName}-dataFactoryEndpoint'
+    serviceResourceId: dataTier.outputs.dataFactoryId
     resourceGroupNameNetwork: networkResourceGroupName
     vnetName: vnetName
     subnetName: 'azureServices'
@@ -157,7 +130,7 @@ module sqlSynapse 'modules/sqlpool.bicep' = {
   name: 'sql-dedicatedpool'
   scope: resourceGroup(resourceGroupData.name)
   dependsOn: [
-    adf
+    dataTier
   ]
   params: {
     serverName: '${uniqueString(resourceGroupData.id)}'
