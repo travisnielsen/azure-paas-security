@@ -1,0 +1,82 @@
+name: Network-DEPLOY
+
+env:
+  LOCATION: centralus
+  ACTION_GROUP: WBADemoAdmin
+  APP_PREFIX: wbademo
+
+on:
+  issue_comment:
+    types: [ created, edited ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: contains(github.event.comment.body, '/network')
+
+    steps:
+    # checkout - remember we have to check out the PR code!
+    - uses: actions/checkout@v2
+    - name: Checkout PR code
+      uses: dawidd6/action-checkout-pr@v1
+      with:
+        pr: ${{ github.event.issue.number }}
+
+    # Install the latest release of the bicep CLI
+    - name: Install bicep CLI
+      run: |
+        curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+        chmod +x ./bicep
+        sudo mv ./bicep /usr/local/bin/bicep
+        bicep --help
+
+    # Transpile bicep file into ARM template
+    - name: Build ARM Template from bicep file
+      run: |
+        bicep build ../../deployments/network.bicep
+
+    - name: Create starting comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        token: ${{ secrets.TOKEN }}
+        issue-number: ${{ github.event.issue.number }}
+        body: |
+          Hey, @${{ github.event.comment.user.login }}!
+          :rocket: Deploying infra to '${{ env.APP_PREFIX }}-RG' is beginning! :rocket:
+
+    - name: 'Login via Az module'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        #enable-AzPSSession: true
+
+    # - name: Run Azure PowerShell script
+    #   uses: azure/powershell@v1
+    #   with:
+    #     azPSVersion: 'latest'
+    #     inlineScript: monitoring/Deploy-AzMonitoring.ps1 -SubscriptionId '${{ env.SUBSCRIPTION_ID }}' -ActionGroupName '${{ env.ACTION_GROUP }}'  -ResourceGroupName ''${{ env.APP_PREFIX }}-RG'' -Location '${{ env.LOCATION }}'
+    # Emit template what-if to show what template will do
+
+    - name: Run what-if
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          az account show
+          az deployment group what-if -f ../../deployments/network.json -p ../../deployments/network.parameters.json -g '${{ env.APP_PREFIX }}-RG'
+
+  # Deploy template
+    - name: Deploy template
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          az account show
+          az deployment group create -f ../../deployments/network.json -p ../../deployments/network.parameters.json -g '${{ env.APP_PREFIX }}-RG'
+
+    - name: Create completed comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        token: ${{ secrets.TOKEN }}
+        issue-number: ${{ github.event.issue.number }}
+        body: |
+          Hey, @${{ github.event.comment.user.login }}!
+          :tada: Infra deployment to '${{ env.APP_PREFIX }}-RG' completed! :tada:

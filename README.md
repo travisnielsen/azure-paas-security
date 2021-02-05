@@ -21,15 +21,20 @@ Deployments of each components utlizied in this solution can be deployed & teste
 1. Developer creates a feature branch for changes to code, and pushes changes to the branch.
 1. When the developer is ready, a PR is created to merge the changes into main.
 1. A team member will review the changes.
-1. If changes are approved, an issue comment `/deploy:{component}` is issued. This triggers a GitHub action to:
+1. If changes are approved, an issue comment `/{component}` is issued. This triggers a GitHub action to:
    - compile and unit test the code (if any)
-   - provision resources in Azure
+   - provision resources in Azure, or
+   - configure settings on resources
 1. After deployment to a motified component is complete you can trigger other components for testing.
 1. The PR is then merged to main to complete the loop.
 
 ### ChatOps
 The messages that are issues must be on a single line and have the following syntax:
 
-|Message|Parameters|Notes|Example|
-|---|---|---|---|
-|`/deploy:{component}`| `component` = `policies`, `monitoring`, or `infra` | Deploys the component separately | `/deploy:monitoring`
+| Component | Note | How to Deploy |
+|---|---|---|
+|`network`| Deploys all networking component | During a PR request simply type `/network` to test and validate
+|`monitoring-app`| Deploys all monitoring component for app tier | During a PR request simply type `/monitoring-app` to test and validate monitoring
+|`monitoring-data`| Deploys all monitoring component for data tier | During a PR request simply type `/monitoring-app` to test and validate monitoring
+|`infra`| Deploys all infrastructure | During a PR request simply type `/infra` to test and validate
+|`policies`| Deploys all Azure policies | During a PR request simply type `/policies` to test and validate

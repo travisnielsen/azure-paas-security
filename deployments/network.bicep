@@ -68,7 +68,7 @@ module spokeVNET 'modules/vnet.bicep' = {
           networkSecurityGroup: {
             id: UtilNsg.outputs.id
           }
-        }     
+        }
       }
       {
         name: 'azureservices'

@@ -5,20 +5,14 @@ Deploys monitoring - alerts and dashboard for resources
 .DESCRIPTION
 Deploys monitoring - alerts and dashboard for resources
 
-.PARAMETER SubscriptionId
-The guid of deployment subscription
-
 .PARAMETER ResourceGroupName
 The resource group where all deployments will reside
 
 .PARAMETER Location
 The deployment region
 
-.PARAMETER ActionGroupName
-The name of the action group for notifications/alerting purposes
-
 .EXAMPLE
-Deploy-AzMonitoring -SubscriptionId <1111-2222-44444> -ResourceGroupName <some-name-rg> -Location <some-region> -ActionGroupName <some-action-name>
+Deploy-AzMonitoring -ResourceGroupName <some-name-rg> -Location <some-region>
 
 .NOTES
 Deploy using ARM templates
@@ -28,18 +22,10 @@ function Deploy-AzMonitoring {
     param (
         # Parameter help description
         [Parameter(Mandatory = $false)]
-        [string] $SubscriptionId,
-
-        # Parameter help description
-        [Parameter(Mandatory = $false)]
         [string] $ResourceGroupName,
 
         [Parameter(Mandatory = $false)]
-        [string] $Location,
-
-        # Parameter help description
-        [Parameter(Mandatory)]
-        [string] $ActionGroupName
+        [string] $Location
     )
 
     # Token replacement extension in ADO will replace all parameter values automatically
@@ -48,32 +34,11 @@ function Deploy-AzMonitoring {
     begin {
         Write-Debug ("[{0} entered]" -f $MyInvocation.MyCommand)
 
-        # Set appropriate subscription context
-        $null = Set-AzContext $SubscriptionId -Scope Process -ErrorAction Stop
+        $null = Get-AzContext -ErrorAction Stop
     }
 
     process {
         $deploymentInputsArgs = @{}
-
-        # region Validate/create Action grouip exists
-        $actionGroup = Get-AzActionGroup -ResourceGroupName $ResourceGroupName -Name $ActionGroupName -ErrorAction SilentlyContinue
-        if ($null -eq $actionGroup) {
-            Write-Host "Action group - '$($ActionGroupName)' does not exist... creating"
-
-            $agTemplateFilePath = (Get-ChildItem -Path "../monitoring" -Recurse).FullName
-            if (!(Test-Path $TemplateFile)) {
-                $TemplateFile = $agTemplateFilePath + '/actionGroup.json'
-            }
-
-            Write-Verbose "Deploying action group..." -Verbose
-            New-AzResourceGroupDeployment -TemplateFile $TemplateFile -ResourceGroupName $ResourceGroupName -Verbose -ErrorVariable ActionGroupFailed
-            if ($ActionGroupFailed) {
-                Write-Error "Failed to deploy action group - '$($ActionGroupName)'" -ErrorAction Stop
-            }
-
-            Write-Verbose "Successfully deployed action group" -Verbose
-        }
-        #endregion action group
 
         Write-Verbose 'Starting alerts/dashboard deployments...' -Verbose
 

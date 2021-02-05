@@ -1,24 +1,11 @@
-param adfName string
-param actionGroupName string
-
-resource dataFactory 'Microsoft.DataFactory/factories@2018-06-01' = {
-  name: adfName
-  location: resourceGroup().location
-  identity: {
-    type: 'SystemAssigned'
+param dataFactoryName string {
+  metadata: {
+    description: 'Name of the data factory. Name must be globally unique'
   }
-  properties: {
-    publicNetworkAccess: 'Disabled'
-    /*
-    repoConfiguration: {
-      type: 'FactoryVSTSConfiguration'
-      accountName: ''
-      projectName: ''
-      repositoryName: ''
-      collaborationBranch: ''
-      rootFolder: ''
-    }
-    */
+}
+param actionGroupName string {
+  metadata: {
+    description: 'Action group name. Must be unique within the resource group'
   }
 }
 
@@ -51,14 +38,14 @@ resource whenadfactivityfailed 'Microsoft.Insights/metricAlerts@2018-03-01' = {
     enabled: true
     evaluationFrequency: 'PT1M'
     scopes: [
-      resourceId('Microsoft.DataFactory/factories', dataFactory.name)
+      resourceId('Microsoft.DataFactory/factories', dataFactoryName)
     ]
     severity: 4
     targetResourceType: 'Microsoft.DataFactory/factories'
     windowSize: 'PT1M'
   }
   dependsOn: [
-    dataFactory
+    resourceId('Microsoft.DataFactory/factories', dataFactoryName)
   ]
 }
 
@@ -91,14 +78,14 @@ resource whenadfpipelinefailed 'Microsoft.Insights/metricAlerts@2018-03-01' = {
     enabled: true
     evaluationFrequency: 'PT1M'
     scopes: [
-      resourceId('Microsoft.DataFactory/factories', dataFactory.name)
+      resourceId('Microsoft.DataFactory/factories', dataFactoryName)
     ]
     severity: 4
     targetResourceType: 'Microsoft.DataFactory/factories'
     windowSize: 'PT1M'
   }
   dependsOn: [
-    dataFactory
+    resourceId('Microsoft.DataFactory/factories', dataFactoryName)
   ]
 }
 
@@ -131,51 +118,13 @@ resource whenadftriggerfailed 'Microsoft.Insights/metricAlerts@2018-03-01' = {
     enabled: true
     evaluationFrequency: 'PT1M'
     scopes: [
-      resourceId('Microsoft.DataFactory/factories', dataFactory.name)
+      resourceId('Microsoft.DataFactory/factories', dataFactoryName)
     ]
     severity: 4
     targetResourceType: 'Microsoft.DataFactory/factories'
     windowSize: 'PT1M'
   }
   dependsOn: [
-    dataFactory
+    resourceId('Microsoft.DataFactory/factories', dataFactoryName)
   ]
 }
-
-resource managedVNET 'Microsoft.DataFactory/factories/managedVirtualNetworks@2018-06-01' = {
-  name: '${dataFactory.name}/default'
-  properties: {}
-}
-
-resource integrationRuntime 'Microsoft.DataFactory/factories/integrationRuntimes@2018-06-01' = {
-  name: '${adfName}/AutoResolveIntegrationRuntime'
-  dependsOn: [
-    dataFactory
-    managedVNET
-  ]
-  properties: {
-    type: 'Managed'
-    managedVirtualNetwork: {
-      referenceName: 'default'
-      type: 'ManagedVirtualNetworkReference'
-    }
-    typeProperties: {
-      computeProperties: {
-        location: 'AutoResolve'
-      }
-    }
-  }
-}
-
-// TODO: need to finsih configuration
-/*
-resource privateLink 'Microsoft.DataFactory/factories/managedVirtualNetworks/managedPrivateEndpoints@2018-06-01' = {
-  name: '${name}/something'
-  properties: {
-
-  }
-}
-*/
-
-output id string = dataFactory.id
-output name string = dataFactory.name

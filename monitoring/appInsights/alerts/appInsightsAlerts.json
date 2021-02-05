@@ -1,0 +1,129 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "applicationInsightsName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the application insights resource. Name must be globally unique"
+            }
+        },
+        "actionGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "Action group name. Must be unique within the resource group"
+            }
+        }
+    },
+    "functions": [],
+    "variables": {
+        "responseTime": 3
+    },
+    "resources": [
+        {
+            "name": "serverExceptions",
+            "type": "Microsoft.Insights/metricAlerts",
+            "location": "global",
+            "apiVersion": "2018-03-01",
+            "properties": {
+                "description": "send alerts for Server exceptions",
+                "severity": 4,
+                "enabled": true,
+                "scopes": [
+                    "[resourceId('Microsoft.Insights/components', parameters('applicationInsightsName'))]"
+                ],
+                "evaluationFrequency": "PT1M",
+                "windowSize": "PT5M",
+                "criteria": {
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                    "allOf": [
+                        {
+                            "name": "Metric3",
+                            "dimensions": [],
+                            "metricName": "exceptions/server",
+                            "operator": "GreaterThan",
+                            "threshold": "[variables('responseTime')]",
+                            "timeAggregation": "Average",
+                            "criterionType": "StaticThresholdCriterion"
+                        }
+                    ]
+                },
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('actionGroupName'))]"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "failedRequests",
+            "type": "Microsoft.Insights/metricAlerts",
+            "location": "global",
+            "apiVersion": "2018-03-01",
+            "properties": {
+                "description": "send alerts for Failed Requests",
+                "severity": 4,
+                "enabled": true,
+                "scopes": [
+                    "[resourceId('Microsoft.Insights/components', parameters('applicationInsightsName'))]"
+                ],
+                "evaluationFrequency": "PT1M",
+                "windowSize": "PT5M",
+                "criteria": {
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                    "allOf": [
+                        {
+                            "name": "Metric2",
+                            "dimensions": [],
+                            "metricName": "requests/failed",
+                            "operator": "GreaterThan",
+                            "threshold": "[variables('responseTime')]",
+                            "timeAggregation": "Average",
+                            "criterionType": "StaticThresholdCriterion"
+                        }
+                    ]
+                },
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('actionGroupName'))]"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "serverResponseTime",
+            "type": "Microsoft.Insights/metricAlerts",
+            "location": "global",
+            "apiVersion": "2018-03-01",
+            "properties": {
+                "description": "response time alert",
+                "severity": 4,
+                "enabled": true,
+                "scopes": [
+                    "[resourceId('Microsoft.Insights/components', parameters('applicationInsightsName'))]"
+                ],
+                "evaluationFrequency": "PT1M",
+                "windowSize": "PT5M",
+                "criteria": {
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+                    "allOf": [
+                        {
+                            "name": "1st criterion",
+                            "metricName": "requests/duration",
+                            "operator": "GreaterThan",
+                            "dimensions": [],
+                            "threshold": "[variables('responseTime')]",
+                            "timeAggregation": "Average",
+                            "criterionType": "StaticThresholdCriterion"
+                        }
+                    ]
+                },
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('actionGroupName'))]"
+                    }
+                ]
+            }
+        }
+    ]
+}

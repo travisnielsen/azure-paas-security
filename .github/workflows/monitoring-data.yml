@@ -1,9 +1,9 @@
-name: monitoring-DEPLOY
+name: monitoring-data-DEPLOY
 
 env:
-  SUBSCRIPTION_ID: f2d85cf0-b21c-4794-a259-f508c89d08c2
-  RESOURCE_GROUP: WBADemo-RG
-  LOCATION: westus2
+  RESOURCE_GROUP: WBADemo-data
+  WORKSPACE_RESOURCE_GROUP: wbademo-app
+  LOCATION: centralus
   ACTION_GROUP: WBADemoAdmin
 
 on:
@@ -13,7 +13,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: contains(github.event.comment.body, '/monitoring')
+    if: contains(github.event.comment.body, '/monitoring-data')
 
     steps:
     # checkout - remember we have to check out the PR code!
@@ -38,10 +38,16 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
         enable-AzPSSession: true
 
-    # - name: Run Azure PowerShell script
+    # - name: 'Enable Diagnostics'
     #   uses: azure/powershell@v1
     #   with:
-    #     azPSVersion: '3.1.0'
+    #     azPSVersion: 'latest'
+    #     inlineScript: monitoring/Deploy-Diagnostics.ps1 -SubscriptionId '${{ env.SUBSCRIPTION_ID }}' -WorkspaceResourceGroup '${{ env.WORKSPACE_RESOURCE_GROUP }}'
+
+    # - name: 'Deploy Alerts/Dashboards'
+    #   uses: azure/powershell@v1
+    #   with:
+    #     azPSVersion: 'latest'
     #     inlineScript: monitoring/Deploy-AzMonitoring.ps1 -SubscriptionId '${{ env.SUBSCRIPTION_ID }}' -ActionGroupName '${{ env.ACTION_GROUP }}'  -ResourceGroupName '${{ env.RESOURCE_GROUP }}' -Location '${{ env.LOCATION }}'
 
     - name: Create completed comment

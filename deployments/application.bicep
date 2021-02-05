@@ -3,14 +3,16 @@ param region string = 'centralus'
 param appPrefix string
 
 // Virtual Machine (jump)
-param vmAdminUserName string
+param vmAdminUserName string = 'groot'
 param vmAdminPwd string {
   secure: true
 }
 
-param tags object
+param tags object = {
+  project: 'AzSecurePaaS'
+}
 
-param sqlAdminLoginName string
+param sqlAdminLoginName string = vmAdminUserName
 param sqlAdminObjectId string
 
 // VNet integration
@@ -50,6 +52,16 @@ module logAnalytics 'modules/loganalytics.bicep' = {
   }
 }
 
+// Deploy Action Group for monitoring/alerting
+module actionGroup 'modules/actionGroup.bicep' = {
+  name: 'actionGroup'
+  scope: resourceGroup(resourceGroupApp.name)
+  params: {
+    actionGroupName: 'wbademoadmin'
+    actionGroupShortName: 'wbademoadmin'
+  }
+}
+
 // App Insights resource
 module appInsights 'modules/appinsights.bicep' = {
   name: 'appInsights'
@@ -57,6 +69,7 @@ module appInsights 'modules/appinsights.bicep' = {
   params: {
     name: uniqueString(resourceGroupApp.id)
     logAnalyticsId: logAnalytics.outputs.id
+    actionGroupName: actionGroup.name
     tags: tags
   }
 }
@@ -132,7 +145,8 @@ module adf 'modules/datafactory.bicep' = {
   scope: resourceGroup(resourceGroupData.name)
   params: {
      adfName: uniqueString(resourceGroupData.id)
-  } 
+     actionGroupName: actionGroupName
+  }
 }
 
 module dataFactoryPrivateEndpoint 'modules/privateendpoint.bicep' = {
