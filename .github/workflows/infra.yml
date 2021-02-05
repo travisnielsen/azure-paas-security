@@ -56,6 +56,7 @@ jobs:
     - name: Deploy template
       uses: azure/powershell@v1
       with:
+        azPSVersion: latest
         inlineScript: |
           Get-AzContext
           New-AzResourceGroupDeployment -TemplateFile ./deployments/application.json -TemplateParameterFile ./deployments/parameters.json -ResourceGroupName '${{ env.APP_PREFIX }}-RG' -vmAdminPassword ${{ secrets.VM_ADMIN_PASSWORD }}
