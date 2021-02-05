@@ -73,7 +73,7 @@ module appInsights 'modules/appinsights.bicep' = {
   params: {
     name: uniqueString(resourceGroupApp.id)
     logAnalyticsId: logAnalytics.outputs.id
-    actionGroupName: actionGroup.outputs.name
+    actionGroupId: actionGroup.outputs.id
     tags: tags
   }
 }
@@ -149,7 +149,7 @@ module adf 'modules/datafactory.bicep' = {
   scope: resourceGroup(resourceGroupData.name)
   params: {
      adfName: uniqueString(resourceGroupData.id)
-     actionGroupName: actionGroup.outputs.name
+     actionGroupId: actionGroup.outputs.id
   }
 }
 
