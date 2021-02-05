@@ -1,5 +1,7 @@
 param adfName string
-param actionGroupId string
+param actionGroupName string
+
+var actionGroupResourceId = resourceId('Microsoft.Insights/actionGroups', actionGroupName)
 
 resource dataFactory 'Microsoft.DataFactory/factories@2018-06-01' = {
   name: adfName
@@ -28,7 +30,7 @@ resource whenadfactivityfailed 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   properties: {
     actions: [
       {
-        actionGroupId: actionGroupId
+        actionGroupId: actionGroupResourceId
       }
     ]
     autoMitigate: true
@@ -68,7 +70,7 @@ resource whenadfpipelinefailed 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   properties: {
     actions: [
       {
-        actionGroupId: actionGroupId
+        actionGroupId: actionGroupResourceId
       }
     ]
     autoMitigate: true
@@ -108,7 +110,7 @@ resource whenadftriggerfailed 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   properties: {
     actions: [
       {
-        actionGroupId: actionGroupId
+        actionGroupId: actionGroupResourceId
       }
     ]
     autoMitigate: true
