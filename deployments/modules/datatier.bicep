@@ -2,7 +2,12 @@ param storageAccountName string
 param storageContainerName string
 param adfName string
 param tags object
-
+param networkResourceGroupName string
+param vnetName string
+param sqlServerName string
+param sqlAdminLoginName string
+param sqlAdminLoginPwd string
+param sqlAdminObjectId string
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2019-06-01' = {
   name: storageAccountName
@@ -23,6 +28,23 @@ resource container 'Microsoft.Storage/storageAccounts/blobServices/containers@20
   name: '${storageAccountName}/default/${storageContainerName}'
 }
 
+module storagePrivateEndpoint 'privateendpoint.bicep' = {
+  name: 'storageAccount-privateEndpoint'
+  dependsOn: [
+    storageAccount
+  ]
+  params: {
+    privateEndpointName: '${storageAccountName}-storageEndpoint'
+    serviceResourceId: storageAccount.id
+    resourceGroupNameNetwork: networkResourceGroupName
+    vnetName: vnetName
+    subnetName: 'azureServices'
+    // dnsZoneId: resourceId(subscriptionId, 'Microsoft.Network/privateDnsZones', 'privatelink.blob.core.windows.net' )
+    dnsZoneName: 'privatelink.blob.core.windows.net'
+    groupId: 'blob'
+  }
+}
+
 resource dataFactory 'Microsoft.DataFactory/factories@2018-06-01' = {
   name: adfName
   location: resourceGroup().location
@@ -41,6 +63,22 @@ resource dataFactory 'Microsoft.DataFactory/factories@2018-06-01' = {
       rootFolder: ''
     }
     */
+  }
+}
+
+module dataFactoryPrivateEndpoint 'privateendpoint.bicep' = {
+  name: 'datafactory-privateEndpoint'
+  dependsOn: [
+    dataFactory
+  ]
+  params: {
+    privateEndpointName: '${dataFactory.name}-dataFactoryEndpoint'
+    serviceResourceId: dataFactory.id
+    resourceGroupNameNetwork: networkResourceGroupName
+    vnetName: vnetName
+    subnetName: 'azureServices'
+    dnsZoneName: 'privatelink.datafactory.azure.net'
+    groupId: 'dataFactory'
   }
 }
 
@@ -91,6 +129,21 @@ resource roleAssignmentName 'Microsoft.Authorization/roleAssignments@2020-04-01-
   scope: storageAccount
 }
 
-output storageAccountId string = storageAccount.id
-output storageAccountApiVersion string = storageAccount.apiVersion
-output dataFactoryId string = dataFactory.id
+// Synapse SQL
+module sqlSynapse 'sqlpool.bicep' = {
+  name: 'sql-dedicatedpool'
+  dependsOn: [
+  ]
+  params: {
+    serverName: sqlServerName
+    sqlPoolName: 'testdb'
+    sqlPoolSKU: 'DW100c'
+    adminLoginName: sqlAdminLoginName
+    adminLoginPwd: sqlAdminLoginPwd
+    adminObjectId: sqlAdminObjectId
+    resourceGroupNameNetwork: networkResourceGroupName
+    vnetNamePrivateEndpoint: vnetName
+    subnetNamePrivateEndpoint: 'azureServices'
+    tags: tags
+  }
+}
