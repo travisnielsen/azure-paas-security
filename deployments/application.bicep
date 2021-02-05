@@ -9,7 +9,6 @@ param vmAdminPwd string {
 }
 
 param tags object
-
 param sqlAdminLoginName string
 param sqlAdminObjectId string
 
@@ -63,6 +62,7 @@ module appInsights 'modules/appinsights.bicep' = {
 
 var storageAccountName = uniqueString(resourceGroupData.id)
 var dataFactoryName = uniqueString(resourceGroupData.id)
+var sqlServerName = uniqueString(resourceGroupData.id)
 
 module dataTier 'modules/datatier.bicep' = {
   name: 'dataTier'
@@ -70,27 +70,14 @@ module dataTier 'modules/datatier.bicep' = {
   params: {
     storageAccountName: storageAccountName
     storageContainerName: 'testdata'
-    adfName: uniqueString(resourceGroupData.id)
+    adfName: dataFactoryName
     tags: tags
-  }
-
-}
-
-module storagePrivateEndpoint 'modules/privateendpoint.bicep' = {
-  name: 'storageAccount-privateEndpoint'
-  scope: resourceGroup(resourceGroupData.name)
-  dependsOn: [
-    dataTier
-  ]
-  params: {
-    privateEndpointName: '${storageAccountName}-storageEndpoint'
-    serviceResourceId: dataTier.outputs.storageAccountId
-    resourceGroupNameNetwork: networkResourceGroupName
     vnetName: vnetName
-    subnetName: 'azureServices'
-    // dnsZoneId: resourceId(subscriptionId, 'Microsoft.Network/privateDnsZones', 'privatelink.blob.core.windows.net' )
-    dnsZoneName: 'privatelink.blob.core.windows.net'
-    groupId: 'blob'
+    networkResourceGroupName: networkResourceGroupName
+    sqlAdminLoginName: sqlAdminLoginName
+    sqlAdminObjectId: sqlAdminObjectId
+    sqlServerName: sqlServerName
+    sqlAdminLoginPwd: vmAdminPwd
   }
 }
 
@@ -105,43 +92,5 @@ module vm 'modules/vm-win10.bicep' = {
     subnetName: 'utility'
     adminUserName: vmAdminUserName
     adminPassword: vmAdminPwd
-  }
-}
-
-module dataFactoryPrivateEndpoint 'modules/privateendpoint.bicep' = {
-  name: 'datafactory-privateEndpoint'
-  scope: resourceGroup(resourceGroupData.name)
-  dependsOn: [
-    dataTier
-  ]
-  params: {
-    privateEndpointName: '${dataFactoryName}-dataFactoryEndpoint'
-    serviceResourceId: dataTier.outputs.dataFactoryId
-    resourceGroupNameNetwork: networkResourceGroupName
-    vnetName: vnetName
-    subnetName: 'azureServices'
-    dnsZoneName: 'privatelink.datafactory.azure.net'
-    groupId: 'dataFactory'
-  }
-}
-
-// Synapse SQL
-module sqlSynapse 'modules/sqlpool.bicep' = {
-  name: 'sql-dedicatedpool'
-  scope: resourceGroup(resourceGroupData.name)
-  dependsOn: [
-    dataTier
-  ]
-  params: {
-    serverName: '${uniqueString(resourceGroupData.id)}'
-    sqlPoolName: 'testdb'
-    sqlPoolSKU: 'DW100c'
-    adminLoginName: sqlAdminLoginName
-    adminLoginPwd: vmAdminPwd
-    adminObjectId: sqlAdminObjectId
-    resourceGroupNameNetwork: networkResourceGroupName
-    vnetNamePrivateEndpoint: vnetName
-    subnetNamePrivateEndpoint: 'azureServices'
-    tags: tags
   }
 }
