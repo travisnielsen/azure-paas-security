@@ -61,7 +61,7 @@ jobs:
           }
           
           Write-Verbose "Deploying..."
-          New-AzDeployment -TemplateFile ./deployments/application.json `
+          New-AzDeployment -TemplateFile ./deployments/network.json `
               -Location '${{ env.LOCATION }}' `
               -TemplateParameterObject $additionalParams `
               -Verbose
