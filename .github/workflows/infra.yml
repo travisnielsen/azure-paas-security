@@ -65,7 +65,9 @@ jobs:
         azPSVersion: latest
         inlineScript: |
           $additionalParams = @{
-            vmAdminPassword = "${{ secrets.VM_ADMIN_PASSWORD }}"
+            appPrefix = "${{ env.APP_PREFIX }}" 
+            vmAdminPwd = "${{ secrets.VM_ADMIN_PASSWORD }}"
+            sqlAdminObjectId = "${{ env.SQL_ADMIN_OBJECT_ID }}"
           }
 
           Write-Verbose "Deploying..."
