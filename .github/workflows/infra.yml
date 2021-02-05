@@ -35,7 +35,7 @@ jobs:
     - name: Build ARM Template from bicep file
       run: |
         ls
-        bicep build "./deployments/application.bicep"
+        bicep build ./deployments/application.bicep
 
     - name: Create starting comment
       uses: peter-evans/create-or-update-comment@v1
