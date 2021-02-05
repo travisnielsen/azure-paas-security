@@ -1,7 +1,7 @@
 name: monitoring-DEPLOY
 
 env:
-  SUBSCRIPTION_ID:
+  SUBSCRIPTION_ID: f2d85cf0-b21c-4794-a259-f508c89d08c2
   RESOURCE_GROUP: WBADemo-RG
   LOCATION: westus2
   ACTION_GROUP: WBADemoAdmin
@@ -22,11 +22,6 @@ jobs:
       uses: dawidd6/action-checkout-pr@v1
       with:
         pr: ${{ github.event.issue.number }}
-
-    - name: "Set env variables from chat message"
-      run: |
-        pattern="^\/monitoring\(\w+)$"
-        [[ "${{ github.event.comment.body }}" =~ $pattern ]]
 
     - name: Create starting comment
       uses: peter-evans/create-or-update-comment@v1
