@@ -1,5 +1,5 @@
 param adfName string
-param actionGroupName string
+param actionGroupId string
 
 var actionGroupResourceId = resourceId('Microsoft.Insights/actionGroups', actionGroupName)
 
@@ -30,7 +30,7 @@ resource whenadfactivityfailed 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   properties: {
     actions: [
       {
-        actionGroupId: actionGroupResourceId
+        actionGroupId: actionGroupId
       }
     ]
     autoMitigate: true
@@ -70,7 +70,7 @@ resource whenadfpipelinefailed 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   properties: {
     actions: [
       {
-        actionGroupId: actionGroupResourceId
+        actionGroupId: actionGroupId
       }
     ]
     autoMitigate: true
@@ -110,7 +110,7 @@ resource whenadftriggerfailed 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   properties: {
     actions: [
       {
-        actionGroupId: actionGroupResourceId
+        actionGroupId: actionGroupId
       }
     ]
     autoMitigate: true
