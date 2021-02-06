@@ -1,7 +1,7 @@
 name: monitoring-app-DEPLOY
 
 env:
-  RESOURCE_GROUP: WBADemo-app
+  WORKSPACE_RESOURCE_GROUP: WBADemo-app
   LOCATION: centralus
   ACTION_GROUP: WBADemoAdmin
 
@@ -54,9 +54,7 @@ jobs:
 
           # Invoke
           $functionInput = @{
-             ActionGroupName   = '${{ env.ACTION_GROUP }}'
-             ResourceGroupName = '${{ env.RESOURCE_GROUP }}'
-             Location          = '${{ env.LOCATION }}'
+             WorkspaceResourceGroup = '${{ env.WORKSPACE_RESOURCE_GROUP }}'
           }
 
           Deploy-AzMonitoring @functionInput -Verbose
