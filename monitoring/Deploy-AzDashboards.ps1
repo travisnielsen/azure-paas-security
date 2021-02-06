@@ -23,10 +23,7 @@ function Deploy-AzDashboards {
     param (
         # Parameter help description
         [Parameter(Mandatory)]
-        [string] $ResourceGroupName,
-
-        [Parameter(Mandatory)]
-        [string] $Location
+        [string] $ResourceGroupName
     )
 
     begin {
@@ -45,7 +42,6 @@ function Deploy-AzDashboards {
         foreach ($path in $paths) {
            $deploymentInputsArgs += @{
                TemplateFile = "$path"
-               Location     = $Location
                Verbose      = $true
                ErrorAction  = "Stop"
            }
