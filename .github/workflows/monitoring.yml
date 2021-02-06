@@ -70,7 +70,6 @@ jobs:
           # Invoke
           $functionInput = @{
              ResourceGroupName = '${{ env.WORKSPACE_RESOURCE_GROUP }}'
-             Location          = '${{ env.LOCATION }}'
           }
 
           Deploy-AzDashboards @functionInput -Verbose
