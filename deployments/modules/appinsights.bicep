@@ -34,7 +34,7 @@ resource serverExceptions 'Microsoft.Insights/metricAlerts@2018-03-01' = {
       'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
       allOf: [
         {
-          name: 'Metric3'
+          name: 'Metric1'
           dimensions: []
           metricName: 'exceptions/server'
           operator: 'GreaterThan'
@@ -102,12 +102,12 @@ resource serverResponseTime 'Microsoft.Insights/metricAlerts@2018-03-01' = {
       'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
       allOf: [
         {
-          name: 'Metric1'
+          name: 'Metric3'
           metricName: 'requests/duration'
           operator: 'GreaterThan'
           dimensions: []
           threshold: responseTime
-          timeAggregation: 'Average'
+          timeAggregation: 'Count'
           criterionType: 'StaticThresholdCriterion'
         }
       ]
