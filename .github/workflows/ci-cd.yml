@@ -4,7 +4,6 @@ env:
   LOCATION: centralus
   APP_PREFIX: wbademo
   ACTION_GROUP_NAME: WBADemoAdmin
-  APP_PREFIX: wbademo
   SQL_ADMIN_OBJECT_ID: da40d0a0-5874-4dfa-885d-f56d0c9b674b
 
 on:
