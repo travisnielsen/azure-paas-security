@@ -323,7 +323,7 @@ module HubAzFw 'modules/azfw.bicep' = {
   name: 'hub-${environment}-azfw'
   scope: resourceGroup(netrg.name)
   params: {
-    prefix: 'hub'
+    prefix: 'hub-${environment}'
     hubId: hubVNET.outputs.id
     utilSubnetCidr: utilSubnetAddressPrefix
     actionGroupId: actionGroup.outputs.id
