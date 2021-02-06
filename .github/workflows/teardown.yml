@@ -42,7 +42,7 @@ jobs:
         azPSVersion: latest
         inlineScript: |
           Write-Verbose "Tearing down..." -Verbose
-          $rgs = Get-AzResourceGroup | Where-Object { $_.Name -like "${{ env.APP_PREFIX }}" }
+          $rgs = Get-AzResourceGroup | Where-Object { $_.ResourceGroupName -like "${{ env.APP_PREFIX }}*" }
           
           foreach ($rg in $rgs) {
              Write-Verbose "Deleting resource group - '$(rg.Name)'" -Verbose
