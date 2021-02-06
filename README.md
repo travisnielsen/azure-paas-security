@@ -61,7 +61,7 @@ The messages that are issues must be on a single line and have the following syn
 
 To deploy networking components in the dev environment, simply write `/network:dev` in your pull request comment. This will automatically trigger the network component pipeline and deploy all networking infrasturcture into the Dev environment (resource group).
 
-![sample_pr](/images/sample_pr.png)
+![sample_pr](images/sample_pr.png)
 
 ### Prerequisites
 
