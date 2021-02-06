@@ -32,12 +32,12 @@ jobs:
         bicep --help
 
     # Transpile network bicep file into ARM template
-    - name: Build ARM Template from bicep file
+    - name: Build network ARM Template from bicep file
       run: |
         bicep build ./deployments/network.bicep
 
     # Transpile application bicep file into ARM template
-    - name: Build infra ARM Template from bicep file
+    - name: Build application ARM Template from bicep file
       run: |
         bicep build ./deployments/application.bicep
 
@@ -57,7 +57,7 @@ jobs:
         enable-AzPSSession: true
 
     # Deploy network template
-    - name: Deploy template
+    - name: Deploy network template
       uses: azure/powershell@v1
       with:
         azPSVersion: latest
@@ -74,7 +74,7 @@ jobs:
               -Verbose
 
     # Deploy application template
-    - name: Deploy template
+    - name: Deploy application template
       uses: azure/powershell@v1
       with:
         azPSVersion: latest
