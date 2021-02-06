@@ -357,7 +357,7 @@ module route 'modules/udr.bicep' = {
   name: 'spoke-${environment}-udr'
   scope: resourceGroup(netrg.name)
   params: {
-    name: '${appPrefix}-${region}-app'
+    name: '${appPrefix}-${environment}-${region}-app'
     azFwlIp: HubAzFw.outputs.privateIp
   }
 }
