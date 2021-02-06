@@ -1,6 +1,13 @@
 targetScope = 'subscription'
 param region string = 'centralus'
 param appPrefix string
+param environment string {
+  allowed: [
+    'dev'
+    'uat'
+    'prod'
+  ]
+}
 
 // Virtual Machine (jump)
 param vmAdminUserName string
@@ -17,12 +24,12 @@ param sqlAdminObjectId string
 
 // VNet integration
 var subscriptionId = subscription().subscriptionId
-var networkResourceGroupName = '${appPrefix}-network'
-var vnetName = '${appPrefix}-${region}-app'
+var networkResourceGroupName = '${appPrefix}-${environment}-network'
+var vnetName = '${appPrefix}-${environment}-${region}-app'
 
-var storageAccountName = uniqueString(resourceGroupData.id)
-var dataFactoryName = uniqueString(resourceGroupData.id)
-var sqlServerName = uniqueString(resourceGroupData.id)
+var storageAccountName = concat(uniqueString(resourceGroupData.id), environment)
+var dataFactoryName = concat(uniqueString(resourceGroupData.id), environment)
+var sqlServerName = concat(uniqueString(resourceGroupData.id), environment)
 
 /*
 var tags = {
@@ -33,17 +40,17 @@ var tags = {
 
 // Create Resource Groups
 resource resourceGroupUtil 'Microsoft.Resources/resourceGroups@2020-06-01' = {
-  name: '${appPrefix}-util'
+  name: '${appPrefix}-${environment}-util'
   location: region
 }
 
 resource resourceGroupData 'Microsoft.Resources/resourceGroups@2020-06-01' = {
-  name: '${appPrefix}-data'
+  name: '${appPrefix}-${environment}-data'
   location: region
 }
 
 resource resourceGroupApp 'Microsoft.Resources/resourceGroups@2020-06-01' = {
-  name: '${appPrefix}-app'
+  name: '${appPrefix}-${environment}-app'
   location: region
 }
 
@@ -52,7 +59,7 @@ module logAnalytics 'modules/loganalytics.bicep' = {
   name: 'logAnalytics'
   scope: resourceGroup(resourceGroupApp.name)
   params: {
-    name: uniqueString(resourceGroupApp.id)
+    name: concat(uniqueString(resourceGroupApp.id), environment)
     appTags: tags
   }
   dependsOn:[
@@ -65,7 +72,7 @@ module actionGroup 'modules/actionGroup.bicep' = {
   name: 'actionGroup'
   scope: resourceGroup(resourceGroupApp.name)
   params: {
-    actionGroupName: 'wbademo-appadmin'
+    actionGroupName: 'wbademo-${environment}-appadmin'
     actionGroupShortName: 'wbademoadmin'
   }
 }
@@ -75,7 +82,7 @@ module appInsights 'modules/appinsights.bicep' = {
   name: 'appInsights'
   scope: resourceGroup(resourceGroupApp.name)
   params: {
-    name: uniqueString(resourceGroupApp.id)
+    name: concat(uniqueString(resourceGroupApp.id), environment)
     logAnalyticsId: logAnalytics.outputs.id
     tags: tags
   }
@@ -104,7 +111,7 @@ module vm 'modules/vm-win10.bicep' = {
   name: 'utilityVM'
   scope: resourceGroup(resourceGroupUtil.name)
   params: {
-    vmName: '${uniqueString(resourceGroupUtil.id)}01'
+    vmName: '${concat(uniqueString(resourceGroupUtil.id), environment)}01'
     networkResourceGroupName: networkResourceGroupName
     vnetName: vnetName
     subnetName: 'utility'

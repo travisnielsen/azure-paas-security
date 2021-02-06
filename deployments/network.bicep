@@ -2,6 +2,13 @@ targetScope = 'subscription'
 
 param region string = 'centralus'
 param appPrefix string
+param environment string {
+  allowed: [
+    'dev'
+    'uat'
+    'prod'
+  ]
+}
 
 // SPOKE VNET IP SETTINGS
 param spokeVnetAddressSpace string = '10.20.0.0/20'
@@ -14,7 +21,7 @@ param integrationSubnetAddressPrefix string = '10.20.2.0/25'  // 128 addresses -
 param networkWatcherName string = 'NetworkWatcher_centralus'
 
 resource netrg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
-  name: '${appPrefix}-network'
+  name: '${appPrefix}-${environment}-network'
   location: region
 }
 
@@ -23,16 +30,16 @@ module actionGroup 'modules/actionGroup.bicep' = {
   name: 'actionGroup'
   scope: resourceGroup(netrg.name)
   params: {
-    actionGroupName: 'wbademo-networkadmin'
+    actionGroupName: 'wbademo-${environment}-networkadmin'
     actionGroupShortName: 'wbademoadmin'
   }
 }
 
 module hubVNET 'modules/vnet.bicep' = {
-  name: 'hub-vnet'
+  name: 'hub-${environment}-vnet'
   scope: resourceGroup(netrg.name)
   params: {
-    vnetName: '${appPrefix}-${region}-hub'
+    vnetName: '${appPrefix}-${environment}-${region}-hub'
     addressSpaces: [
       '10.10.0.0/20'
     ]
@@ -48,10 +55,10 @@ module hubVNET 'modules/vnet.bicep' = {
 }
 
 module spokeVNET 'modules/vnet.bicep' = {
-  name: 'spoke-vnet'
+  name: 'spoke-${environment}-vnet'
   scope: resourceGroup(netrg.name)
   params: {
-    vnetName: '${appPrefix}-${region}-app'
+    vnetName: '${appPrefix}-${environment}-${region}-app'
     addressSpaces: [
       spokeVnetAddressSpace
     ]
@@ -121,10 +128,10 @@ module spokeVNET 'modules/vnet.bicep' = {
 
 // NSG for Utility subnet (jump servers)
 module UtilNsg 'modules/nsg.bicep' = {
-  name: '${appPrefix}-${region}-app-util'
+  name: '${appPrefix}-${environment}-${region}-app-util'
   scope: resourceGroup(netrg.name)
   params: {
-    name: '${appPrefix}-${region}-app-util'
+    name: '${appPrefix}-${environment}-${region}-app-util'
     networkWatcherName: networkWatcherName
     securityRules: [
       {
@@ -162,13 +169,13 @@ module UtilNsg 'modules/nsg.bicep' = {
 
 // NSG for Bastion subnet
 module BastionNsg 'modules/nsg.bicep' = {
-  name: '${appPrefix}-${region}-app-bastion'
+  name: '${appPrefix}-${environment}-${region}-app-bastion'
   scope: resourceGroup(netrg.name)
   dependsOn: [
     UtilNsg
   ]
   params: {
-    name: '${appPrefix}-${region}-app-bastion'
+    name: '${appPrefix}-${environment}-${region}-app-bastion'
     networkWatcherName: networkWatcherName
     securityRules: [
         // SEE: https://docs.microsoft.com/en-us/azure/bastion/bastion-nsg#apply
@@ -259,13 +266,13 @@ module BastionNsg 'modules/nsg.bicep' = {
 
 // NSG for Azure services configured with Private Link
 module AzureServicesNsg 'modules/nsg.bicep' = {
-  name: '${appPrefix}-${region}-app-azsvc'
+  name: '${appPrefix}-${environment}-${region}-app-azsvc'
   scope: resourceGroup(netrg.name)
   dependsOn: [
     BastionNsg
   ]
   params: {
-    name: '${appPrefix}-${region}-app-azsvc'
+    name: '${appPrefix}-${environment}-${region}-app-azsvc'
     networkWatcherName: networkWatcherName
     securityRules: [
       {
@@ -313,7 +320,7 @@ module AzureServicesNsg 'modules/nsg.bicep' = {
 
 // Hub firewall
 module HubAzFw 'modules/azfw.bicep' = {
-  name: 'hub-azfw'
+  name: 'hub-${environment}-azfw'
   scope: resourceGroup(netrg.name)
   params: {
     prefix: 'hub'
@@ -347,7 +354,7 @@ module SpokeToHubPeering 'modules/peering.bicep' = {
 
 // User Define Route (force egress traffic through hub firewall)
 module route 'modules/udr.bicep' = {
-  name: 'spoke-udr'
+  name: 'spoke-${environment}-udr'
   scope: resourceGroup(netrg.name)
   params: {
     name: '${appPrefix}-${region}-app'
@@ -357,7 +364,7 @@ module route 'modules/udr.bicep' = {
 
 // Bastion
 module bastion 'modules/bastion.bicep' = {
-  name: 'spoke-bastion'
+  name: 'spoke-${environment}-bastion'
   scope: resourceGroup(netrg.name)
   params: {
     name: '${uniqueString(netrg.id)}'
@@ -367,7 +374,7 @@ module bastion 'modules/bastion.bicep' = {
 
 // Private DNS zone for Azure Web Sites (Functions and Web Apps)
 module privateZoneAzureWebsites 'modules/dnszoneprivate.bicep' = {
-  name: 'dns-private-azurewebsites'
+  name: 'dns-private-${environment}-azurewebsites'
   scope: resourceGroup(netrg.name)
   params: {
     zoneName: 'privatelink.azurewebsites.net'
@@ -376,7 +383,7 @@ module privateZoneAzureWebsites 'modules/dnszoneprivate.bicep' = {
 
 // Link the spoke VNet to the privatelink.azurewebsites.net private zone
 module spokeVnetAzureWebsitesZoneLink 'modules/dnszonelink.bicep' = {
-  name: 'dns-link-azurewebsites-spokevnet'
+  name: 'dns-link-${environment}-azurewebsites-spokevnet'
   scope: resourceGroup(netrg.name)
   dependsOn: [
     privateZoneAzureWebsites
@@ -391,7 +398,7 @@ module spokeVnetAzureWebsitesZoneLink 'modules/dnszonelink.bicep' = {
 
 // Private DNS zone for Azure Blob Storage (ADLS)
 module privateZoneAzureBlobStorage 'modules/dnszoneprivate.bicep' = {
-  name: 'dns-private-storage-blob'
+  name: 'dns-private-${environment}-storage-blob'
   scope: resourceGroup(netrg.name)
   params: {
     zoneName: 'privatelink.blob.core.windows.net'
@@ -400,7 +407,7 @@ module privateZoneAzureBlobStorage 'modules/dnszoneprivate.bicep' = {
 
 // Link the spoke VNet to the privatelink.blob.core.windows.net private zone
 module spokeVnetAzureBlobStorageZoneLink 'modules/dnszonelink.bicep' = {
-  name: 'dns-link-blobstorage-spokevnet'
+  name: 'dns-link-${environment}-blobstorage-spokevnet'
   scope: resourceGroup(netrg.name)
   dependsOn: [
     privateZoneAzureBlobStorage
@@ -415,7 +422,7 @@ module spokeVnetAzureBlobStorageZoneLink 'modules/dnszonelink.bicep' = {
 
 // Private DNS for Azure Data Factory
 module privateZoneAzureDataFactory 'modules/dnszoneprivate.bicep' = {
-  name: 'dns-private-datafactory'
+  name: 'dns-private-${environment}-datafactory'
   scope: resourceGroup(netrg.name)
   params: {
     zoneName: 'privatelink.datafactory.azure.net'
@@ -424,7 +431,7 @@ module privateZoneAzureDataFactory 'modules/dnszoneprivate.bicep' = {
 
 // Link the spoke VNet to the privatelink.datafactory.azure.net private zone
 module spokeVnetAzureDataFactoryZoneLink 'modules/dnszonelink.bicep' = {
-  name: 'dns-link-datafactory-spokevnet'
+  name: 'dns-link-${environment}-datafactory-spokevnet'
   scope: resourceGroup(netrg.name)
   dependsOn: [
     privateZoneAzureDataFactory
@@ -439,7 +446,7 @@ module spokeVnetAzureDataFactoryZoneLink 'modules/dnszonelink.bicep' = {
 
 // Private DNS for Synapse SQL
 module privateZoneSynapseSql 'modules/dnszoneprivate.bicep' = {
-  name: 'dns-private-synapse-sql'
+  name: 'dns-private-${environment}-synapse-sql'
   scope: resourceGroup(netrg.name)
   params: {
     zoneName: 'privatelink.sql.azuresynapse.net'
@@ -448,7 +455,7 @@ module privateZoneSynapseSql 'modules/dnszoneprivate.bicep' = {
 
 // Link the spoke VNet to the privatelink.sql.azuresynapse.net private zone
 module spokeVnetSynapseSqlZoneLink 'modules/dnszonelink.bicep' = {
-  name: 'dns-link-synapsesql-spokevnet'
+  name: 'dns-link-${environment}-synapsesql-spokevnet'
   scope: resourceGroup(netrg.name)
   dependsOn: [
     privateZoneSynapseSql
@@ -463,7 +470,7 @@ module spokeVnetSynapseSqlZoneLink 'modules/dnszonelink.bicep' = {
 
 // Private DNS zone for SQL
 module privateZoneSql 'modules/dnszoneprivate.bicep' = {
-  name: 'dns-private-sql'
+  name: 'dns-private-${environment}-sql'
   scope: resourceGroup(netrg.name)
   params: {
     zoneName: 'privatelink.database.windows.net'
@@ -472,7 +479,7 @@ module privateZoneSql 'modules/dnszoneprivate.bicep' = {
 
 // Link the spoke VNet to the privatelink.database.windows.net private zone
 module spokeVnetSqlZoneLink 'modules/dnszonelink.bicep' = {
-  name: 'dns-link-sql-spokevnet'
+  name: 'dns-link-${environment}-sql-spokevnet'
   scope: resourceGroup(netrg.name)
   dependsOn: [
     privateZoneSql
@@ -487,7 +494,7 @@ module spokeVnetSqlZoneLink 'modules/dnszonelink.bicep' = {
 
 // Private DNS zone for other Azure services
 module privateZoneAzure 'modules/dnszoneprivate.bicep' = {
-  name: 'dns-private-azure'
+  name: 'dns-private-${environment}-azure'
   scope: resourceGroup(netrg.name)
   params: {
     zoneName: 'privatelink.azure.com'
@@ -499,7 +506,7 @@ module privateZoneAzure 'modules/dnszoneprivate.bicep' = {
 // NOTE: See: https://stackoverflow.com/questions/64725413/azure-bastion-and-private-link-in-the-same-virtual-network-access-to-virtual-ma
 // Must add CNAME record for 'management.privatelink.azure.com' that points to 'arm-frontdoor-prod.trafficmanager.net'
 module frontdoorcname 'modules/dnscname.bicep' = {
-  name: 'frontdoor-cname'
+  name: 'frontdoor-${environment}-cname'
   scope: resourceGroup(netrg.name)
   dependsOn: [
     privateZoneAzure
@@ -513,7 +520,7 @@ module frontdoorcname 'modules/dnscname.bicep' = {
 
 
 module spokeVnetAzureZoneLink 'modules/dnszonelink.bicep' = {
-  name: 'dns-link-azure-spokevnet'
+  name: 'dns-link-${environment}-azure-spokevnet'
   scope: resourceGroup(netrg.name)
   dependsOn: [
     privateZoneAzure
