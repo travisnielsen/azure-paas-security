@@ -71,9 +71,9 @@ resource failedRequests 'Microsoft.Insights/metricAlerts@2018-03-01' = {
           name: 'Metric2'
           dimensions: []
           metricName: 'requests/failed'
-          operator: 'GreaterThan'
-          threshold: responseTime
-          timeAggregation: 'Average'
+          operator: 'GreaterThanOrEqual'
+          threshold: 1
+          timeAggregation: 'Count'
           criterionType: 'StaticThresholdCriterion'
         }
       ]

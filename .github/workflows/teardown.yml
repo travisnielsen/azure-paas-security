@@ -41,7 +41,7 @@ jobs:
       with:
         azPSVersion: latest
         inlineScript: |
-          Write-Verbose "Tearing down..."
+          Write-Verbose "Tearing down..." -Verbose
           $rgs = Get-AzResourceGroup | Where-Object { $_.Name -like "${{ env.APP_PREFIX }}" }
           
           foreach ($rg in $rgs) {
