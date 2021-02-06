@@ -12,7 +12,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: contains(github.event.comment.body, '/monitoring-app')
+    if: contains(github.event.comment.body, '/monitoring')
 
     steps:
     # checkout - remember we have to check out the PR code!
@@ -44,7 +44,7 @@ jobs:
     #     tokenSuffix: '}#'
     #     files: '["**/*.parameters.json"]'
 
-    - name: Powershell - Enable Diagnostics
+    - name: Enable Diagnostics logging
       uses: azure/powershell@v1
       with:
         azPSVersion: 'latest'
@@ -58,6 +58,22 @@ jobs:
           }
 
           Deploy-AzDiagnostics @functionInput -Verbose
+
+    - name: Deploy Dashboards
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: 'latest'
+        inlineScript: |
+          # load module
+          . monitoring/Deploy-AzDashboards.ps1 
+
+          # Invoke
+          $functionInput = @{
+             ResourceGroupName = '${{ env.WORKSPACE_RESOURCE_GROUP }}'
+             Location          = '${{ env.LOCATION }}'
+          }
+
+          Deploy-AzDashboards @functionInput -Verbose
 
     - name: Create completed comment
       uses: peter-evans/create-or-update-comment@v1

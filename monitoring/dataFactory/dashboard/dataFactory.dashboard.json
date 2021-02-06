@@ -15,25 +15,6 @@
           "description": "The gallery that the workbook will been shown under. Supported values include workbook, tsg, etc. Usually, this is 'workbook'"
         }
       },
-      "DiagnosticsWorkspaceName": {
-            "type": "string",
-            "metadata": {
-                "description": "Provide the workspace name for your Network Diagnostic logs"
-            }
-        },
-        "DiagnosticsWorkspaceSubscription": {
-            "type": "string",
-            "defaultValue": "[subscription().subscriptionId]",
-            "metadata": {
-                "description": "Provide the workspace subscription GUID for your Network Diagnostic logs"
-            }
-        },
-        "DiagnosticsWorkspaceResourceGroup": {
-            "type": "string",
-            "metadata": {
-                "description": "Provide the workspace resourcegroupname for your Network Diagnostic logs"
-            }
-        },
       "workbookId": {
         "type": "string",
         "defaultValue": "[newGuid()]",
@@ -43,7 +24,7 @@
       }
     },
     "variables": {
-        "workbookSourceId": "[concat('/subscriptions/',parameters('DiagnosticsWorkspaceSubscription'),'/resourcegroups/', parameters('DiagnosticsWorkspaceResourceGroup'), '/providers/Microsoft.OperationalInsights/workspaces/',parameters('DiagnosticsWorkspaceName'))]"
+        "workbookSourceId": "Azure Monitor"
     },
     "resources": [
       {
