@@ -13,7 +13,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: contains(github.event.comment.body, '/infra')
+    if: contains(github.event.comment.body, '/infra:')
 
     steps:
     # checkout - remember we have to check out the PR code!
@@ -22,6 +22,12 @@ jobs:
       uses: dawidd6/action-checkout-pr@v1
       with:
         pr: ${{ github.event.issue.number }}
+
+    - name: "Set env variables from chat message"
+      run: |
+        pattern="^\/infra\:(\w+)$"
+        [[ "${{ github.event.comment.body }}" =~ $pattern ]]
+        echo ::set-env name=ENVIRONMENT::"${BASH_REMATCH[1]}"
 
     # Install the latest release of the bicep CLI
     - name: Install bicep CLI
@@ -44,7 +50,7 @@ jobs:
         issue-number: ${{ github.event.issue.number }}
         body: |
           Hey, @${{ github.event.comment.user.login }}!
-          :rocket: Deploying infra to '${{ env.APP_PREFIX }}-RG' is beginning! :rocket:
+          :rocket: Deploying infra to ${{ env.ENVIRONMENT }} is beginning! :rocket:
 
     - name: 'Login via Az module'
       uses: azure/login@v1
@@ -61,6 +67,7 @@ jobs:
           # deploy infra resources
           $additionalParams = @{
             appPrefix         = "${{ env.APP_PREFIX }}"
+            environment       = "${{ env.ENVIRONMENT }}"
             vmAdminPwd        = "${{ secrets.VM_ADMIN_PASSWORD }}"
             sqlAdminObjectId  = "${{ env.SQL_ADMIN_OBJECT_ID }}"
             sqlAdminLoginName = "groot"
@@ -80,4 +87,4 @@ jobs:
         issue-number: ${{ github.event.issue.number }}
         body: |
           Hey, @${{ github.event.comment.user.login }}!
-          :tada: Infra deployment to '${{ env.APP_PREFIX }}-RG' completed! :tada:
+          :tada: Infra deployment to ${{ env.ENVIRONMENT }} completed! :tada:
