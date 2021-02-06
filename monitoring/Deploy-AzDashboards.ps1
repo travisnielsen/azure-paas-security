@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-Deploys monitoring - alerts and dashboard for resources
+Deploys monitoring - dashboard for resources
 
 .DESCRIPTION
-Deploys monitoring - alerts and dashboard for resources
+Deploys monitoring - dashboard for resources
 
 .PARAMETER ResourceGroupName
 The resource group where all deployments will reside
@@ -12,7 +12,7 @@ The resource group where all deployments will reside
 The deployment region
 
 .EXAMPLE
-Deploy-AzMonitoring -ResourceGroupName <some-name-rg> -Location <some-region>
+Deploy-AzDashboards -ResourceGroupName <some-name-rg> -Location <some-region>
 
 .NOTES
 Deploy using ARM templates
@@ -28,9 +28,6 @@ function Deploy-AzMonitoring {
         [string] $Location
     )
 
-    # Token replacement extension in ADO will replace all parameter values automatically
-    # Deployment will reference parameter files for each alert/dashboard
-
     begin {
         Write-Debug ("[{0} entered]" -f $MyInvocation.MyCommand)
 
@@ -42,33 +39,10 @@ function Deploy-AzMonitoring {
 
         Write-Verbose 'Starting alerts/dashboard deployments...' -Verbose
 
-        #region Get all prameters and print
-		$param = ConvertFrom-Json (Get-Content -Raw -Path $parameterFilePath)
-		$paramSet = @{ }
-		$param.parameters | Get-Member -MemberType NoteProperty | ForEach-Object {
-			$key = $_.Name
-			$value = $param.parameters.($_.Name).Value
-			if ($value -is [string]) {
-				$formattedValue = $value.subString(0, [System.Math]::Min(15, $value.Length))
-				if ($value.Length -gt 50) {
-					$formattedValue += '...'
-				}
-			}
-			else {
-				$formattedValue = $value
-			}
-
-			$paramSet[$key] = $formattedValue
-		}
-
-		Write-Debug ($paramSet | Format-Table | Out-String) -Verbose
-
         $deploymentInputsArgs += @{
-            Name                  = ("{0}-{1}" -f $SubscriptionId, (Get-Date -Format yyyMMddHHmmss))
-            TemplateParameterFile = $ParameterFilePath
-            Location              = $Location
-            Verbose               = $true
-            ErrorAction           = "Stop"
+            Location    = $Location
+            Verbose     = $true
+            ErrorAction = "Stop"
         }
 
         # Perform actual deployment of alerts or dashboard
