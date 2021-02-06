@@ -57,7 +57,7 @@ jobs:
         enable-AzPSSession: true
 
     # Deploy network template
-    - name: Deploy template
+    - name: Deploy network template
       uses: azure/powershell@v1
       with:
         azPSVersion: latest
@@ -74,7 +74,7 @@ jobs:
               -Verbose
 
     # Deploy application template
-    - name: Deploy template
+    - name: Deploy application template
       uses: azure/powershell@v1
       with:
         azPSVersion: latest
