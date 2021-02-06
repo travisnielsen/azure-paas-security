@@ -22,10 +22,10 @@ function Deploy-AzDashboards {
     [CmdletBinding(SupportsShouldProcess)]
     param (
         # Parameter help description
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory)]
         [string] $ResourceGroupName,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory)]
         [string] $Location
     )
 
