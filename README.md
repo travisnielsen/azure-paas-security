@@ -31,10 +31,12 @@ Deployments of each components utlizied in this solution can be deployed & teste
 ### ChatOps
 The messages that are issues must be on a single line and have the following syntax:
 
-| Component | Note | How to Deploy |
-|---|---|---|
-|`network`| Deploys all networking component | During a PR request simply type `/network` to test and validate
-|`monitoring-app`| Deploys all monitoring component for app tier | During a PR request simply type `/monitoring-app` to test and validate monitoring
-|`monitoring-data`| Deploys all monitoring component for data tier | During a PR request simply type `/monitoring-app` to test and validate monitoring
-|`infra`| Deploys all infrastructure | During a PR request simply type `/infra` to test and validate
-|`policies`| Deploys all Azure policies | During a PR request simply type `/policies` to test and validate
+| Component | Pipeline Name | Note | How to Deploy |
+|---|---|---|---|
+|`network`| `network.yml` | Deploys all networking component | During a PR request simply type `/network` to test and validate |
+|`monitoring`| `monitoring.yml` | Deploys all monitoring component (diagnostics, alerts & dashboard) | During a PR request simply type `/monitoring` to test and validate monitoring |
+|`infra`| `infra.yml` | Deploys all infrastructure | During a PR request simply type `/infra` to test and validate |
+|`full`| `ci-cd.yml` | Triggers full deployment pipeline | During a PR request simply type `/full` to deploy whole environment |
+|`teardown`| `teardown.yml` | Tear down entire environment | During a PR request simply type `/teardown` to delete all resource groups |
+
+
