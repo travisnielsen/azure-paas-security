@@ -84,7 +84,7 @@ In order to utilize the automated deployment pipelines, you need to configure th
       "tenantId": "<GUID>"
     }
     ```
-1. In your repository, use Add secret to create a new secret named `AZURE_CREDENTIALS` and paste the contents of the JSON above. 
+1. In your repository, use Add secret to create a new secret named `AZURE_CREDENTIALS` and paste the contents of the JSON above.
 1. Lastly, create another secret called `VM_ADMIN_PASSWORD` and enter a random password.
 
 You should be set to utilize the pipeline without any issues now.
@@ -96,8 +96,5 @@ The following is a list of parameters needed at runtime to run/provision the env
 | Parameter | Default Value | Type | Description |
 |---|---|---|---|
 |`LOCATION`| `centralus` | string | Deployment region |
-|`WORKSPACE_RESOURCE_GROUP`| `wbademo-app` | string | Resource group of log analytics workspace |
 |`APP_PREFIX`| `wbademo` | string | App prefix name |
-|`ACTION_GROUP_NAME`| `WBADemoAdmin` | string | Name of the action group for Monitoring purposes |
 |`SQL_ADMIN_OBJECT_ID`|  | string | Name The object Id of the user - needed for SQL |
-  
