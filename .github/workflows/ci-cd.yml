@@ -10,7 +10,7 @@ on:
     types: [ created, edited ]
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     if: contains(github.event.comment.body, '/full:')
 
@@ -61,11 +61,6 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
         enable-AzPSSession: true
 
-  deploy_network:
-    needs: [build]
-    runs-on: ubuntu-latest
-
-    steps:
     # Deploy network template
     - name: Deploy network template
       uses: azure/powershell@v1
@@ -78,17 +73,12 @@ jobs:
             environment = "${{ env.ENVIRONMENT }}"
           }
 
-          Write-Verbose "Deploying..."
+          Write-Verbose "Deploying network..."
           New-AzDeployment -TemplateFile ./deployments/network.json `
               -Location '${{ env.LOCATION }}' `
               -TemplateParameterObject $additionalParams `
               -Verbose
 
-  deploy_application:
-    needs: [deploy_network]
-    runs-on: ubuntu-latest
-
-    steps:
     # Deploy application template
     - name: Deploy application template
       uses: azure/powershell@v1
@@ -105,17 +95,12 @@ jobs:
             vmAdminUserName   = "groot"
           }
 
-          Write-Verbose "Deploying..."
+          Write-Verbose "Deploying applications..."
           New-AzDeployment -TemplateFile ./deployments/application.json `
               -Location '${{ env.LOCATION }}' `
               -TemplateParameterObject $additionalParams `
               -Verbose
 
-  deploy_monitoring:
-    needs: [deploy_application]
-    runs-on: ubuntu-latest
-
-    steps:
     - name: Enable Diagnostics logging
       uses: azure/powershell@v1
       with:
@@ -153,4 +138,4 @@ jobs:
         issue-number: ${{ github.event.issue.number }}
         body: |
           Hey, @${{ github.event.comment.user.login }}!
-          :tada: Full environment to ${{ env.ENVIRONMENT }} deployment completed! :tada:
+          :tada: Full environment deployment to ${{ env.ENVIRONMENT }} completed! :tada:
