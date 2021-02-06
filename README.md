@@ -39,4 +39,41 @@ The messages that are issues must be on a single line and have the following syn
 |`full`| `ci-cd.yml` | Triggers full deployment pipeline | During a PR request simply type `/full` to deploy whole environment |
 |`teardown`| `teardown.yml` | Tear down entire environment | During a PR request simply type `/teardown` to delete all resource groups |
 
+### Prerequisites
 
+In order to utilize the automated deployment pipelines, you need to configure the following:
+1. Create a Service Principal in Azure
+    ```azurecli
+    az ad sp create-for-rbac --name "{sp-name}" --sdk-auth --role contributor \
+        --scopes /subscriptions/{subscription-id}
+    ```
+    Replace the following:
+
+      * `{sp-name}` with a suitable name for your service principal, such as the name of the app itself. The name must be unique within your organization.
+      * `{subscription-id}` with the subscription ID you want to use (found in Subscriptions in portal)
+1. Fill out the information as displayed in the JSON:
+    ```json
+    {
+      "clientId": "<GUID>",
+      "clientSecret": "<GUID>",
+      "subscriptionId": "<GUID>",
+      "tenantId": "<GUID>"
+    }
+    ```
+1. In your repository, use Add secret to create a new secret named `AZURE_CREDENTIALS` and paste the contents of the JSON above. 
+1. Lastly, create another secret called `VM_ADMIN_PASSWORD` and enter a random password.
+
+You should be set to utilize the pipeline without any issues now.
+
+### Pipeline Parameters
+
+The following is a list of parameters needed at runtime to run/provision the environment.
+
+| Parameter | Default Value | Type | Description |
+|---|---|---|---|
+|`LOCATION`| `centralus` | string | Deployment region |
+|`WORKSPACE_RESOURCE_GROUP`| `wbademo-app` | string | Resource group of log analytics workspace |
+|`APP_PREFIX`| `wbademo` | string | App prefix name |
+|`ACTION_GROUP_NAME`| `WBADemoAdmin` | string | Name of the action group for Monitoring purposes |
+|`SQL_ADMIN_OBJECT_ID`|  | string | Name The object Id of the user - needed for SQL |
+  
