@@ -50,14 +50,14 @@ jobs:
         azPSVersion: 'latest'
         inlineScript: |
           # load module
-          . monitoring/Deploy-AzMonitoring.ps1 
+          . monitoring/Deploy-AzDiagnostics.ps1 
 
           # Invoke
           $functionInput = @{
              WorkspaceResourceGroup = '${{ env.WORKSPACE_RESOURCE_GROUP }}'
           }
 
-          Deploy-AzMonitoring @functionInput -Verbose
+          Deploy-AzDiagnostics @functionInput -Verbose
 
     - name: Create completed comment
       uses: peter-evans/create-or-update-comment@v1
