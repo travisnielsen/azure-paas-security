@@ -18,6 +18,16 @@ resource netrg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   location: region
 }
 
+// Deploy Action Group for monitoring/alerting
+module actionGroup 'modules/actionGroup.bicep' = {
+  name: 'actionGroup'
+  scope: resourceGroup(netrg.name)
+  params: {
+    actionGroupName: 'wbademo-networkadmin'
+    actionGroupShortName: 'wbademoadmin'
+  }
+}
+
 module hubVNET 'modules/vnet.bicep' = {
   name: 'hub-vnet'
   scope: resourceGroup(netrg.name)
@@ -309,6 +319,7 @@ module HubAzFw 'modules/azfw.bicep' = {
     prefix: 'hub'
     hubId: hubVNET.outputs.id
     utilSubnetCidr: utilSubnetAddressPrefix
+    actionGroupId: actionGroup.outputs.id
   }
 }
 
