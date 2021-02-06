@@ -65,6 +65,7 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
 
+    steps:
     # Deploy network template
     - name: Deploy network template
       uses: azure/powershell@v1
@@ -87,6 +88,7 @@ jobs:
     needs: [deploy_network]
     runs-on: ubuntu-latest
 
+    steps:
     # Deploy application template
     - name: Deploy application template
       uses: azure/powershell@v1
@@ -113,6 +115,7 @@ jobs:
     needs: [deploy_application]
     runs-on: ubuntu-latest
 
+    steps:
     - name: Enable Diagnostics logging
       uses: azure/powershell@v1
       with:
