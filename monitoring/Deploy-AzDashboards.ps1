@@ -12,7 +12,7 @@ The resource group where all deployments will reside
 The deployment region
 
 .EXAMPLE
-Deploy-AzDashboards -ResourceGroupName <some-name-rg> -Location <some-region>
+Deploy-AzDashboards -ResourceGroupName <some-name-rg>
 
 .NOTES
 Deploy using ARM templates

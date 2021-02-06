@@ -65,7 +65,7 @@ module actionGroup 'modules/actionGroup.bicep' = {
   name: 'actionGroup'
   scope: resourceGroup(resourceGroupApp.name)
   params: {
-    actionGroupName: 'wbademoadmin'
+    actionGroupName: 'wbademo-appadmin'
     actionGroupShortName: 'wbademoadmin'
   }
 }

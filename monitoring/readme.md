@@ -19,36 +19,25 @@ You will need to run the `Deploy-AzDiagnostics.ps1` script with along with all a
 >```
 > Other resoruce types will be onboarded at a later date.
 
-### Diagnostics pipeline
-
-
-
----
-
 ## Alerts
 
-WIP
-
+Alerts will be deployed along with it's respective related resource via the ARM templates. Currently, we are only working with a subset of alerts (~2 per critical resources).
 
 ## Dashboards
 
-For this POC environemnt, Azure dashbaords are being used for visualization purposes. y. While some resources already come with full felged dashboards upon deployment, others do not. So, are developing custom dashboards using Azure workbooks for resources that do not currenly support this natively.
-
-Here is a list of resources that have bultin dashboard support and do not (custom).
-
-### Custom
+For this POC environemnt, Azure dashbaords are being used for visualization purposes. While some resources already come with full felged dashboards upon deployment, others do not. So, are developing custom dashboards using Azure workbooks for resources that do not currenly support this natively.
 
 | Resource | Workbook features | Location |
 | --- | --- | --- |
-| Data Factory | Pipeline, activity, trigger runs, Errors | Log Analytics (AzureDataFactoryAnalytics) |
-| Azure Firewall |  | Log Analytics (AzureFirewallAnalytics) |
-
-### BuiltIn
-
-| Resource | Workbook features | Location |
-| --- | --- | --- |
+| Data Factory | Pipeline, activity, trigger runs, Errors | Azure Monitor |
+| Azure Firewall |  | Azure Monitor |
 | Application insights | Availability, Failure, Performance, Usage | Azure monitor |
 | Virtual machines | Insights - Performance, Metrics (CPU, Disk, Network | Azure monitor |
 | Network | Network health, Connectivity, Traffic | Azure monitor |
 | Storage accounts | Transactions, Latency, Client Errors | Azure monitor |
 | Log analytics | Workspace usage | Azure monitor |
+
+## Monitoring pipeline
+
+A standalone pipeline has been created for testing the Monitoring components. It works similarly to what's documented in the root [README.md](../README.md).
+To run the pipeline, simply create a PR and enter `/monitoring` in the comment section. This will auto-trigger the pipeline.
