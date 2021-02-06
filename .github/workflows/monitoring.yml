@@ -1,7 +1,7 @@
 name: monitoring-DEPLOY
 
 env:
-  WORKSPACE_RESOURCE_GROUP: WBADemo-app
+  APP_PREFIX: WBADemo
   LOCATION: centralus
   ACTION_GROUP: WBADemoAdmin
 
@@ -12,7 +12,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: contains(github.event.comment.body, '/monitoring')
+    if: contains(github.event.comment.body, '/monitoring:')
 
     steps:
     # checkout - remember we have to check out the PR code!
@@ -21,6 +21,12 @@ jobs:
       uses: dawidd6/action-checkout-pr@v1
       with:
         pr: ${{ github.event.issue.number }}
+
+    - name: "Set env variables from chat message"
+      run: |
+        pattern="^\/monitoring\:(\w+)$"
+        [[ "${{ github.event.comment.body }}" =~ $pattern ]]
+        echo ::set-env name=ENVIRONMENT::"${BASH_REMATCH[1]}"
 
     - name: Create starting comment
       uses: peter-evans/create-or-update-comment@v1
@@ -50,11 +56,11 @@ jobs:
         azPSVersion: 'latest'
         inlineScript: |
           # load module
-          . monitoring/Deploy-AzDiagnostics.ps1 
+          . monitoring/Deploy-AzDiagnostics.ps1
 
           # Invoke
           $functionInput = @{
-             WorkspaceResourceGroup = '${{ env.WORKSPACE_RESOURCE_GROUP }}'
+             WorkspaceResourceGroup = '${{ env:APP_PREFIX }}-${{ env.ENVIRONMENT }}-app'
           }
 
           Deploy-AzDiagnostics @functionInput -Verbose
@@ -65,11 +71,11 @@ jobs:
         azPSVersion: 'latest'
         inlineScript: |
           # load module
-          . monitoring/Deploy-AzDashboards.ps1 
+          . monitoring/Deploy-AzDashboards.ps1
 
           # Invoke
           $functionInput = @{
-             ResourceGroupName = '${{ env.WORKSPACE_RESOURCE_GROUP }}'
+             ResourceGroupName = '${{ env:APP_PREFIX }}-${{ env.ENVIRONMENT }}-app'
           }
 
           Deploy-AzDashboards @functionInput -Verbose

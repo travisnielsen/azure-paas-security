@@ -21,7 +21,27 @@ You will need to run the `Deploy-AzDiagnostics.ps1` script with along with all a
 
 ## Alerts
 
-Alerts will be deployed along with it's respective related resource via the ARM templates. Currently, we are only working with a subset of alerts (~2 per critical resources).
+Alerts will be deployed along with it's respective related resource via the ARM templates. Currently, we are only working with a subset of alerts (~3 per critical resources).
+
+Below is a list of alerts per resource:
+
+### Azure Firewall
+
+- FirewallHealth
+- ApplicationRuleHit
+- NetworkRuleHit
+
+### Azure SQL
+
+### Data factory
+
+- ActivityFailedRuns
+- PipelineFailedRuns
+- TriggerFailedRuns
+
+### Application Insights
+
+- Smart detection: this is enabled by default. Learn [more](https://docs.microsoft.com/en-us/azure/azure-monitor/app/proactive-arm-config#smart-detection-rule-names)
 
 ## Dashboards
 

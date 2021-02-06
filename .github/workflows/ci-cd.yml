@@ -2,9 +2,7 @@ name: environment-DEPLOY
 
 env:
   LOCATION: centralus
-  WORKSPACE_RESOURCE_GROUP: WBADemo-app
   APP_PREFIX: wbademo
-  ACTION_GROUP_NAME: WBADemoAdmin
   SQL_ADMIN_OBJECT_ID: da40d0a0-5874-4dfa-885d-f56d0c9b674b
 
 on:
@@ -12,9 +10,9 @@ on:
     types: [ created, edited ]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    if: contains(github.event.comment.body, '/full')
+    if: contains(github.event.comment.body, '/full:')
 
     steps:
     # checkout - remember we have to check out the PR code!
@@ -23,6 +21,21 @@ jobs:
       uses: dawidd6/action-checkout-pr@v1
       with:
         pr: ${{ github.event.issue.number }}
+
+    - name: "Set env variables from chat message"
+      run: |
+        pattern="^\/full\:(\w+)$"
+        [[ "${{ github.event.comment.body }}" =~ $pattern ]]
+        echo ::set-env name=ENVIRONMENT::"${BASH_REMATCH[1]}"
+
+    - name: Create starting comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.issue.number }}
+        body: |
+          Hey, @${{ github.event.comment.user.login }}!
+          :rocket: Deploying full environment to ${{ env.ENVIRONMENT }} is beginning! :rocket:
 
     # Install the latest release of the bicep CLI
     - name: Install bicep CLI
@@ -42,21 +55,17 @@ jobs:
       run: |
         bicep build ./deployments/application.bicep
 
-    - name: Create starting comment
-      uses: peter-evans/create-or-update-comment@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        issue-number: ${{ github.event.issue.number }}
-        body: |
-          Hey, @${{ github.event.comment.user.login }}!
-          :rocket: Deploying full environment is beginning! :rocket:
-
     - name: 'Login via Az module'
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
         enable-AzPSSession: true
 
+  deploy_network:
+    needs: [build]
+    runs-on: ubuntu-latest
+
+    steps:
     # Deploy network template
     - name: Deploy network template
       uses: azure/powershell@v1
@@ -65,15 +74,21 @@ jobs:
         inlineScript: |
           # deploy infra resources
           $additionalParams = @{
-            appPrefix = "${{ env.APP_PREFIX }}"
+            appPrefix   = "${{ env.APP_PREFIX }}"
+            environment = "${{ env.ENVIRONMENT }}"
           }
-          
+
           Write-Verbose "Deploying..."
           New-AzDeployment -TemplateFile ./deployments/network.json `
               -Location '${{ env.LOCATION }}' `
               -TemplateParameterObject $additionalParams `
               -Verbose
 
+  deploy_application:
+    needs: [deploy_network]
+    runs-on: ubuntu-latest
+
+    steps:
     # Deploy application template
     - name: Deploy application template
       uses: azure/powershell@v1
@@ -83,6 +98,7 @@ jobs:
           # deploy infra resources
           $additionalParams = @{
             appPrefix         = "${{ env.APP_PREFIX }}"
+            environment       = "${{ env.ENVIRONMENT }}"
             vmAdminPwd        = "${{ secrets.VM_ADMIN_PASSWORD }}"
             sqlAdminObjectId  = "${{ env.SQL_ADMIN_OBJECT_ID }}"
             sqlAdminLoginName = "groot"
@@ -95,6 +111,11 @@ jobs:
               -TemplateParameterObject $additionalParams `
               -Verbose
 
+  deploy_monitoring:
+    needs: [deploy_application]
+    runs-on: ubuntu-latest
+
+    steps:
     - name: Enable Diagnostics logging
       uses: azure/powershell@v1
       with:
@@ -105,7 +126,7 @@ jobs:
 
           # Invoke
           $functionInput = @{
-             WorkspaceResourceGroup = '${{ env.WORKSPACE_RESOURCE_GROUP }}'
+             WorkspaceResourceGroup = '${{ env:APP_PREFIX }}-${{ env.ENVIRONMENT }}-app'
           }
 
           Deploy-AzDiagnostics @functionInput -Verbose
@@ -116,11 +137,11 @@ jobs:
         azPSVersion: 'latest'
         inlineScript: |
           # load module
-          . monitoring/Deploy-AzDashboards.ps1 
+          . monitoring/Deploy-AzDashboards.ps1
 
           # Invoke
           $functionInput = @{
-             ResourceGroupName = '${{ env.WORKSPACE_RESOURCE_GROUP }}'
+             ResourceGroupName = '${{ env:APP_PREFIX }}-${{ env.ENVIRONMENT }}-app'
           }
 
           Deploy-AzDashboards @functionInput -Verbose
@@ -132,4 +153,4 @@ jobs:
         issue-number: ${{ github.event.issue.number }}
         body: |
           Hey, @${{ github.event.comment.user.login }}!
-          :tada: Full environment deployment completed! :tada:
+          :tada: Full environment to ${{ env.ENVIRONMENT }} deployment completed! :tada:

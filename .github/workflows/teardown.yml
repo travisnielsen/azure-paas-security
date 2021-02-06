@@ -11,7 +11,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: contains(github.event.comment.body, '/teardown')
+    if: contains(github.event.comment.body, '/teardown:')
 
     steps:
     # checkout - remember we have to check out the PR code!
@@ -21,6 +21,12 @@ jobs:
       with:
         pr: ${{ github.event.issue.number }}
 
+    - name: "Set env variables from chat message"
+      run: |
+        pattern="^\/teardown\:(\w+)$"
+        [[ "${{ github.event.comment.body }}" =~ $pattern ]]
+        echo ::set-env name=ENVIRONMENT::"${BASH_REMATCH[1]}"
+
     - name: Create starting comment
       uses: peter-evans/create-or-update-comment@v1
       with:
@@ -28,7 +34,7 @@ jobs:
         issue-number: ${{ github.event.issue.number }}
         body: |
           Hey, @${{ github.event.comment.user.login }}!
-          :rocket: Tearding down is beginning! :rocket:
+          :rocket: Tearding down ${{ env:ENVIRONMENT }} is beginning! :rocket:
 
     - name: 'Login via Az module'
       uses: azure/login@v1
@@ -42,11 +48,11 @@ jobs:
         azPSVersion: latest
         inlineScript: |
           Write-Verbose "Tearing down..." -Verbose
-          $rgs = Get-AzResourceGroup | Where-Object { $_.ResourceGroupName -like "${{ env.APP_PREFIX }}*" }
-          
+          $rgs = Get-AzResourceGroup | Where-Object { $_.ResourceGroupName -like "${{ env.APP_PREFIX }}-${{ env:ENVIRONMENT }}*" }
+
           foreach ($rg in $rgs) {
              Write-Verbose "Deleting resource group(s)" -Verbose
-             $rg | Remove-AzResourceGroup -Force 
+             $rg | Remove-AzResourceGroup -Force
           }
 
     - name: Create completed comment
@@ -56,4 +62,4 @@ jobs:
         issue-number: ${{ github.event.issue.number }}
         body: |
           Hey, @${{ github.event.comment.user.login }}!
-          :tada: Teardown completed! :tada:
+          :tada: Teardown of ${{ env:ENVIRONMENT }} completed! :tada:
