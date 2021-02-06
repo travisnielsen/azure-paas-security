@@ -34,7 +34,7 @@ jobs:
         issue-number: ${{ github.event.issue.number }}
         body: |
           Hey, @${{ github.event.comment.user.login }}!
-          :rocket: Tearding down ${{ env:ENVIRONMENT }} is beginning! :rocket:
+          :rocket: Tearding down ${{ env.ENVIRONMENT }} is beginning! :rocket:
 
     - name: 'Login via Az module'
       uses: azure/login@v1
