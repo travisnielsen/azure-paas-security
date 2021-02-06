@@ -74,8 +74,8 @@ jobs:
         inlineScript: |
           # deploy infra resources
           $additionalParams = @{
-            appPrefix = "${{ env.APP_PREFIX }}"
-            environment       = "${{ env.ENVIRONMENT }}"
+            appPrefix   = "${{ env.APP_PREFIX }}"
+            environment = "${{ env.ENVIRONMENT }}"
           }
 
           Write-Verbose "Deploying..."
