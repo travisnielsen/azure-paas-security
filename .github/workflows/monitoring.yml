@@ -12,7 +12,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: contains(github.event.comment.body, '/monitoring-app')
+    if: contains(github.event.comment.body, '/monitoring')
 
     steps:
     # checkout - remember we have to check out the PR code!
