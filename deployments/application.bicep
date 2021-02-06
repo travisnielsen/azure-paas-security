@@ -77,7 +77,6 @@ module appInsights 'modules/appinsights.bicep' = {
   params: {
     name: uniqueString(resourceGroupApp.id)
     logAnalyticsId: logAnalytics.outputs.id
-    actionGroupId: actionGroup.outputs.id
     tags: tags
   }
 }
