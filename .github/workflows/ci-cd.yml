@@ -45,7 +45,7 @@ jobs:
     - name: Create starting comment
       uses: peter-evans/create-or-update-comment@v1
       with:
-        token: ${{ secrets.TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         issue-number: ${{ github.event.issue.number }}
         body: |
           Hey, @${{ github.event.comment.user.login }}!
@@ -128,7 +128,7 @@ jobs:
     - name: Create completed comment
       uses: peter-evans/create-or-update-comment@v1
       with:
-        token: ${{ secrets.TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         issue-number: ${{ github.event.issue.number }}
         body: |
           Hey, @${{ github.event.comment.user.login }}!
