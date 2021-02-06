@@ -1,4 +1,4 @@
-name: monitoring-app-DEPLOY
+name: monitoring-DEPLOY
 
 env:
   WORKSPACE_RESOURCE_GROUP: WBADemo-app
