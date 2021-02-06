@@ -1,9 +1,6 @@
 param name string
 param logAnalyticsId string
 param tags object
-param actionGroupId string
-
-var responseTime = 3
 
 resource appInsights 'Microsoft.Insights/components@2020-02-02-preview' = {
   name: name
