@@ -1,7 +1,7 @@
 name: monitoring-app-DEPLOY
 
 env:
-  RESOURCE_GROUP: WBADemo-app
+  WORKSPACE_RESOURCE_GROUP: WBADemo-app
   LOCATION: centralus
   ACTION_GROUP: WBADemoAdmin
 
@@ -44,11 +44,20 @@ jobs:
     #     tokenSuffix: '}#'
     #     files: '["**/*.parameters.json"]'
 
-    # - name: Run Azure PowerShell script
-    #   uses: azure/powershell@v1
-    #   with:
-    #     azPSVersion: 'latest'
-    #     inlineScript: monitoring/Deploy-AzMonitoring.ps1 -SubscriptionId '${{ env.SUBSCRIPTION_ID }}' -ActionGroupName '${{ env.ACTION_GROUP }}'  -ResourceGroupName '${{ env.RESOURCE_GROUP }}' -Location '${{ env.LOCATION }}'
+    - name: Powershell - Enable Diagnostics
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: 'latest'
+        inlineScript: |
+          # load module
+          . monitoring/Deploy-AzMonitoring.ps1 
+
+          # Invoke
+          $functionInput = @{
+             WorkspaceResourceGroup = '${{ env.WORKSPACE_RESOURCE_GROUP }}'
+          }
+
+          Deploy-AzMonitoring @functionInput -Verbose
 
     - name: Create completed comment
       uses: peter-evans/create-or-update-comment@v1

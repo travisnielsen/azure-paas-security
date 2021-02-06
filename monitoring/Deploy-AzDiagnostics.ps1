@@ -5,14 +5,11 @@ Configures diagnostics settings on resources
 .DESCRIPTION
 Configures diagnostics settings on resources
 
-.PARAMETER SubscriptionId
-The guid of deployment subscription
-
 .PARAMETER WorkspaceResourceGroup
 The resource group where your log analytics workspace resides
 
 .EXAMPLE
-Deploy-AzMonitoring -SubscriptionId <1111-2222-44444> -WorkspaceResourceGroup <some-name-rg>
+Deploy-AzMonitoring -WorkspaceResourceGroup <some-name-rg>
 
 .NOTES
 
@@ -22,10 +19,6 @@ function Deploy-AzDiagnostics {
     param (
         # Parameter help description
         [Parameter(Mandatory)]
-        [string] $SubscriptionId,
-
-        # Parameter help description
-        [Parameter(Mandatory)]
         [string] $WorkspaceResourceGroup
     )
 
@@ -33,7 +26,7 @@ function Deploy-AzDiagnostics {
         Write-Debug ("[{0} entered]" -f $MyInvocation.MyCommand)
 
         # Set appropriate subscription context
-        $null = Set-AzContext $SubscriptionId -Scope Process -ErrorAction Stop
+        $null = Get-AzContext -ErrorAction Stop
     }
 
     process {
