@@ -52,40 +52,6 @@ resource serverExceptions 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   }
 }
 
-resource failedRequests 'Microsoft.Insights/metricAlerts@2018-03-01' = {
-  name: 'failedRequests'
-  location: 'global'
-  properties: {
-    description: 'send alerts for Failed Requests'
-    severity: 4
-    enabled: true
-    scopes: [
-      resourceId('Microsoft.Insights/components', appInsights.name)
-    ]
-    evaluationFrequency: 'PT1M'
-    windowSize: 'PT5M'
-    criteria: {
-      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
-      allOf: [
-        {
-          name: 'Metric2'
-          dimensions: []
-          metricName: 'requests/failed'
-          operator: 'GreaterThanOrEqual'
-          threshold: 1
-          timeAggregation: 'Count'
-          criterionType: 'StaticThresholdCriterion'
-        }
-      ]
-    }
-    actions: [
-      {
-        actionGroupId: actionGroupId
-      }
-    ]
-  }
-}
-
 resource serverResponseTime 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'serverResponseTime'
   location: 'global'
