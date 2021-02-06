@@ -3,7 +3,7 @@ param region string = 'centralus'
 param appPrefix string
 
 // Virtual Machine (jump)
-param vmAdminUserName string = 'groot'
+param vmAdminUserName string
 param vmAdminPwd string {
   secure: true
 }
@@ -12,13 +12,17 @@ param tags object = {
   project: 'AzSecurePaaS'
 }
 
-param sqlAdminLoginName string = vmAdminUserName
+param sqlAdminLoginName string
 param sqlAdminObjectId string
 
 // VNet integration
 var subscriptionId = subscription().subscriptionId
 var networkResourceGroupName = '${appPrefix}-network'
 var vnetName = '${appPrefix}-${region}-app'
+
+var storageAccountName = uniqueString(resourceGroupData.id)
+var dataFactoryName = uniqueString(resourceGroupData.id)
+var sqlServerName = uniqueString(resourceGroupData.id)
 
 /*
 var tags = {
@@ -78,32 +82,21 @@ module appInsights 'modules/appinsights.bicep' = {
   }
 }
 
-// Storage account for data
-module storageAccount 'modules/storageaccount.bicep' = {
-  name: 'storageAccount'
+module dataTier 'modules/datatier.bicep' = {
+  name: 'dataTier'
   scope: resourceGroup(resourceGroupData.name)
   params: {
-    accountName: uniqueString(resourceGroupData.id)
-    containerName: 'testdata'
+    storageAccountName: storageAccountName
+    storageContainerName: 'testdata'
+    adfName: dataFactoryName
     tags: tags
-  }
-}
-
-module storagePrivateEndpoint 'modules/privateendpoint.bicep' = {
-  name: 'storageAccount-privateEndpoint'
-  scope: resourceGroup(resourceGroupData.name)
-  dependsOn: [
-    storageAccount
-  ]
-  params: {
-    privateEndpointName: '${storageAccount.outputs.name}-storageEndpoint'
-    serviceResourceId: storageAccount.outputs.id
-    resourceGroupNameNetwork: networkResourceGroupName
     vnetName: vnetName
-    subnetName: 'azureServices'
-    // dnsZoneId: resourceId(subscriptionId, 'Microsoft.Network/privateDnsZones', 'privatelink.blob.core.windows.net' )
-    dnsZoneName: 'privatelink.blob.core.windows.net'
-    groupId: 'blob'
+    networkResourceGroupName: networkResourceGroupName
+    sqlAdminLoginName: sqlAdminLoginName
+    sqlAdminObjectId: sqlAdminObjectId
+    sqlServerName: sqlServerName
+    sqlAdminLoginPwd: vmAdminPwd
+    actionGroupId: actionGroup.outputs.id
   }
 }
 
@@ -118,75 +111,5 @@ module vm 'modules/vm-win10.bicep' = {
     subnetName: 'utility'
     adminUserName: vmAdminUserName
     adminPassword: vmAdminPwd
-  }
-}
-
-// Function App
-module functionApp 'modules/functionapp.bicep' = {
-  name: 'functionApp'
-  dependsOn: [
-    storageAccount
-  ]
-  scope: resourceGroup(resourceGroupApp.name)
-  params: {
-    name: uniqueString(resourceGroupApp.id)
-    appInsightsKey: appInsights.outputs.key
-    resourceGroupNameNetwork: networkResourceGroupName
-    vnetName: vnetName
-    subnetNameIntegration: 'funcintegration'
-    subnetNamePrivateEndpoint: 'azureservices'
-    workerRuntime: 'node'
-    storageAccountNameData: storageAccount.outputs.name
-    storageAccountIdData: storageAccount.outputs.id
-    storageAccountApiVersionData: storageAccount.outputs.apiVersion
-    appTags: tags
-  }
-}
-
-// Data Factory
-module adf 'modules/datafactory.bicep' = {
-  name: 'adf'
-  scope: resourceGroup(resourceGroupData.name)
-  params: {
-     adfName: uniqueString(resourceGroupData.id)
-     actionGroupId: actionGroup.outputs.id
-  }
-}
-
-module dataFactoryPrivateEndpoint 'modules/privateendpoint.bicep' = {
-  name: 'datafactory-privateEndpoint'
-  scope: resourceGroup(resourceGroupData.name)
-  dependsOn: [
-    adf
-  ]
-  params: {
-    privateEndpointName: '${adf.outputs.name}-dataFactoryEndpoint'
-    serviceResourceId: adf.outputs.id
-    resourceGroupNameNetwork: networkResourceGroupName
-    vnetName: vnetName
-    subnetName: 'azureServices'
-    dnsZoneName: 'privatelink.datafactory.azure.net'
-    groupId: 'dataFactory'
-  }
-}
-
-// Synapse SQL
-module sqlSynapse 'modules/sqlpool.bicep' = {
-  name: 'sql-dedicatedpool'
-  scope: resourceGroup(resourceGroupData.name)
-  dependsOn: [
-    adf
-  ]
-  params: {
-    serverName: '${uniqueString(resourceGroupData.id)}'
-    sqlPoolName: 'testdb'
-    sqlPoolSKU: 'DW100c'
-    adminLoginName: sqlAdminLoginName
-    adminLoginPwd: vmAdminPwd
-    adminObjectId: sqlAdminObjectId
-    resourceGroupNameNetwork: networkResourceGroupName
-    vnetNamePrivateEndpoint: vnetName
-    subnetNamePrivateEndpoint: 'azureServices'
-    tags: tags
   }
 }

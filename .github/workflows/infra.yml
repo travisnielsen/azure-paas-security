@@ -9,12 +9,6 @@ env:
 on:
   issue_comment:
     types: [ created, edited ]
-  pull_request:
-      branches:
-        - main
-  push:
-    branches:
-      - dev
 
 jobs:
   deploy:
@@ -66,9 +60,11 @@ jobs:
         inlineScript: |
           # deploy infra resources
           $additionalParams = @{
-            appPrefix        = "${{ env.APP_PREFIX }}"
-            vmAdminPwd       = "${{ secrets.VM_ADMIN_PASSWORD }}"
-            sqlAdminObjectId = "${{ env.SQL_ADMIN_OBJECT_ID }}"
+            appPrefix         = "${{ env.APP_PREFIX }}"
+            vmAdminPwd        = "${{ secrets.VM_ADMIN_PASSWORD }}"
+            sqlAdminObjectId  = "${{ env.SQL_ADMIN_OBJECT_ID }}"
+            sqlAdminLoginName = "groot"
+            vmAdminUserName   = "groot"
           }
 
           Write-Verbose "Deploying..."
