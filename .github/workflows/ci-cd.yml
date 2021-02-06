@@ -2,6 +2,7 @@ name: environment-DEPLOY
 
 env:
   LOCATION: centralus
+  WORKSPACE_RESOURCE_GROUP: WBADemo-app
   APP_PREFIX: wbademo
   ACTION_GROUP_NAME: WBADemoAdmin
   SQL_ADMIN_OBJECT_ID: da40d0a0-5874-4dfa-885d-f56d0c9b674b
@@ -108,6 +109,21 @@ jobs:
           }
 
           Deploy-AzDiagnostics @functionInput -Verbose
+
+    - name: Deploy Dashboards
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: 'latest'
+        inlineScript: |
+          # load module
+          . monitoring/Deploy-AzDashboards.ps1 
+
+          # Invoke
+          $functionInput = @{
+             ResourceGroupName = '${{ env.WORKSPACE_RESOURCE_GROUP }}'
+          }
+
+          Deploy-AzDashboards @functionInput -Verbose
 
     - name: Create completed comment
       uses: peter-evans/create-or-update-comment@v1
