@@ -126,7 +126,7 @@ jobs:
 
           # Invoke
           $functionInput = @{
-             WorkspaceResourceGroup = '${{ env:APP_PREFIX }}-${{ env.ENVIRONMENT }}-app'
+             WorkspaceResourceGroup = '${{ env.APP_PREFIX }}-${{ env.ENVIRONMENT }}-app'
           }
 
           Deploy-AzDiagnostics @functionInput -Verbose
@@ -141,7 +141,7 @@ jobs:
 
           # Invoke
           $functionInput = @{
-             ResourceGroupName = '${{ env:APP_PREFIX }}-${{ env.ENVIRONMENT }}-app'
+             ResourceGroupName = '${{ env.APP_PREFIX }}-${{ env.ENVIRONMENT }}-app'
           }
 
           Deploy-AzDashboards @functionInput -Verbose

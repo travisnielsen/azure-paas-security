@@ -35,7 +35,7 @@ jobs:
         issue-number: ${{ github.event.issue.number }}
         body: |
           Hey, @${{ github.event.comment.user.login }}!
-          :rocket: Deploying monitoring to ${{ env.RESOURCE_GROUP }} is beginning! :rocket:
+          :rocket: Deploying monitoring to ${{ env.ENVIRONMENT }} is beginning! :rocket:
 
     - name: 'Login via Az module'
       uses: azure/login@v1
@@ -60,7 +60,7 @@ jobs:
 
           # Invoke
           $functionInput = @{
-             WorkspaceResourceGroup = '${{ env:APP_PREFIX }}-${{ env.ENVIRONMENT }}-app'
+             WorkspaceResourceGroup = '${{ env.APP_PREFIX }}-${{ env.ENVIRONMENT }}-app'
           }
 
           Deploy-AzDiagnostics @functionInput -Verbose
@@ -75,7 +75,7 @@ jobs:
 
           # Invoke
           $functionInput = @{
-             ResourceGroupName = '${{ env:APP_PREFIX }}-${{ env.ENVIRONMENT }}-app'
+             ResourceGroupName = '${{ env.APP_PREFIX }}-${{ env.ENVIRONMENT }}-app'
           }
 
           Deploy-AzDashboards @functionInput -Verbose
@@ -87,4 +87,4 @@ jobs:
         issue-number: ${{ github.event.issue.number }}
         body: |
           Hey, @${{ github.event.comment.user.login }}!
-          :tada: Monitoring deployment to ${{ env.RESOURCE_GROUP }} completed! :tada:
+          :tada: Monitoring deployment to ${{ env.ENVIRONMENT }} completed! :tada:
