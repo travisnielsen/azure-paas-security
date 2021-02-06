@@ -33,14 +33,13 @@ function Deploy-AzDashboards {
     }
 
     process {
-        $deploymentInputsArgs = @{}
         
         $paths = (Get-ChildItem -Path "./monitoring" -Recurse -Filter "*.dashboard.json").FullName
 
         Write-Verbose 'Starting alerts/dashboard deployments...' -Verbose
         
         foreach ($path in $paths) {
-           $deploymentInputsArgs += @{
+           $deploymentInputsArgs = @{
                TemplateFile = "$path"
                Verbose      = $true
                ErrorAction  = "Stop"
