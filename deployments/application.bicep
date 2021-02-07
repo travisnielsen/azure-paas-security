@@ -78,6 +78,9 @@ module dataTier 'modules/datatier.bicep' = {
     sqlAdminObjectId: sqlAdminObjectId
     sqlServerName: sqlServerName
     sqlAdminLoginPwd: vmAdminPwd
+    sqlDatabaseName: 'AdventureWorksLT'
+    sqlDatabaseSKU: 'DW100c'
+    logAnalyticsWorkspaceId: logAnalytics.outputs.id
   }
 }
 

@@ -483,7 +483,6 @@ module privateZoneAzure 'modules/dnszoneprivate.bicep' = {
   }
 }
 
-
 // Link the spoke VNet to the privatelink.azure.com private zone
 // NOTE: See: https://stackoverflow.com/questions/64725413/azure-bastion-and-private-link-in-the-same-virtual-network-access-to-virtual-ma
 // Must add CNAME record for 'management.privatelink.azure.com' that points to 'arm-frontdoor-prod.trafficmanager.net'
@@ -499,7 +498,6 @@ module frontdoorcname 'modules/dnscname.bicep' = {
     alias: 'arm-frontdoor-prod.trafficmanager.net'
   }
 }
-
 
 module spokeVnetAzureZoneLink 'modules/dnszonelink.bicep' = {
   name: 'dns-link-azure-spokevnet'

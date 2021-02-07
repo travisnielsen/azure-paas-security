@@ -4,9 +4,9 @@
 
 TBD
 
-## Prepare the parameters file
+## Deploy Core Infrastructure
 
-In the `deployments` directory, create a new file called `application.params.json` and place the following contents into the file:
+In the `deployments` directory, create a new file called `core.params.json` and place the following contents into the file:
 
 ```json
 {
@@ -16,8 +16,6 @@ In the `deployments` directory, create a new file called `application.params.jso
       "appPrefix": { "value": "paasdemo" },
       "vmAdminUserName": { "value": "paasadmin" },
       "vmAdminPwd": { "value": "" },
-      "sqlAdminLoginName": { "value": "" },
-      "sqlAdminObjectId": { "value": "" },
       "tags": {
         "value": {
           "appId": "paasdemo",
@@ -31,26 +29,52 @@ In the `deployments` directory, create a new file called `application.params.jso
 Update the following values:
 
 - `vmAdminPwd`: Set this to a random password
-- `sqlAdminLoginName`: Set this to the name of an AAD user or group
-- `sqlAdminObjectId`: Use the following Azure CLI command to find the object ID of the user of group:
-
-```bash
-az ad user show --id <sqlAdminLoginName> --query objectId --out tsv
-```
-
-## Deploy Network and Application Infrastructure
 
 ```bash
 az login
-bicep build network.bicep
-az deployment sub create --name networkdeployment --location centralus --template-file network.json --parameters appPrefix=paasdemo
+bicep build core.bicep
+az deployment sub create --name coredeployment --location centralus --template-file core.json --parameters appPrefix=paasdemo
 ```
 
-Next, run the following command to deploy the Function Premium instance:
+## Deploy Data Infrastructure
+
+In the `deployments` directory, create a new file called `data.params.json` and place the following contents into the file:
+
+```json
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "appPrefix": { "value": "paasdemo" },
+      "sqlAdminLoginName": { "value": "" },
+      "sqlAdminLoginPwd": { "value": "" },
+      "sqlAdminObjectId": { "value": "" },
+      "tags": {
+        "value": {
+          "appId": "paasdemo",
+          "costCenter": "abc123"
+        }
+      }
+    }
+  }
+```
+
+Update the following values:
+
+- `sqlAdminLoginName`: Set this to the name of an AAD user or group
+- `sqlAdminLoginPwd`: Set this to a random password
+- `sqlAdminObjectId`: Use the following Azure CLI command to find the object ID of the user of group:
+
+  ```bash
+  az ad user show --id <sqlAdminLoginName> --query objectId --out tsv
+  ```
+
+Next, run the following command to deploy the data tier:
 
 ```bash
-bicep build application.bicep
-az deployment sub create --name appdeployment --location centralus --template-file application.json --parameters application.params.json
+bicep build data.bicep
+az group create --name paasdemo-data --location centralus
+az deployment group create --resource-group paasdemo-data --name appdeployment --template-file data.json --parameters application.params.json
 ```
 
 ## Deploy Application Code
