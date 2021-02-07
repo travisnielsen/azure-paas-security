@@ -17,13 +17,6 @@ var subscriptionId = subscription().subscriptionId
 var networkResourceGroupName = '${appPrefix}-network'
 var vnetName = '${appPrefix}-${region}-app'
 
-/*
-var tags = {
-  AppID: 'paasdemo'
-  CostCenter: 'abc123'
-}
-*/
-
 resource resourceGroupUtil 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: '${appPrefix}-util'
   location: region

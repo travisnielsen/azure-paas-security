@@ -5,7 +5,7 @@ param sqlAdminLoginPwd string
 param sqlAdminObjectId string
 
 param storageContainerName string = 'testdata'
-param sqlDatabaseName string = 'AdventureWorksLT'
+param sqlDatabaseName string = 'nytaxi'
 param sqlDatabaseSKU string = 'DW100c'
 
 // VNet integration
@@ -14,7 +14,8 @@ var region = resourceGroup().location
 var networkResourceGroupName = '${appPrefix}-network'
 var vnetName = '${appPrefix}-${region}-app'
 
-var sqlServerName = uniqueString(resourceGroup().id)
+var sqlServerName = '${uniqueString(resourceGroup().id)}-sql'
+var dataFactoryName = '${uniqueString(resourceGroup().id)}-df'
 
 /*
  *  Storage account
@@ -91,7 +92,7 @@ module sqlSynapse 'modules/sqlpool.bicep' = {
 }
 
 resource dataFactory 'Microsoft.DataFactory/factories@2018-06-01' = {
-  name: uniqueString(resourceGroup().id)
+  name: dataFactoryName
   dependsOn: [
     storageAccount
     sqlSynapse

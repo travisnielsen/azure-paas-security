@@ -13,12 +13,12 @@ In the `deployments` directory, create a new file called `core.params.json` and 
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-      "appPrefix": { "value": "paasdemo" },
-      "vmAdminUserName": { "value": "paasadmin" },
+      "appPrefix": { "value": "contoso" },
+      "vmAdminUserName": { "value": "contosoadmin" },
       "vmAdminPwd": { "value": "" },
       "tags": {
         "value": {
-          "appId": "paasdemo",
+          "appId": "contoso",
           "costCenter": "abc123"
         }
       }
@@ -33,7 +33,7 @@ Update the following values:
 ```bash
 az login
 bicep build core.bicep
-az deployment sub create --name coredeployment --location centralus --template-file core.json --parameters appPrefix=paasdemo
+az deployment sub create --name core --location centralus --template-file core.json --parameters appPrefix=contoso
 ```
 
 ## Deploy Data Infrastructure
@@ -45,18 +45,18 @@ In the `deployments` directory, create a new file called `data.params.json` and 
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-      "appPrefix": { "value": "paasdemo" },
+      "appPrefix": { "value": "contoso" },
       "sqlAdminLoginName": { "value": "" },
       "sqlAdminLoginPwd": { "value": "" },
       "sqlAdminObjectId": { "value": "" },
       "tags": {
         "value": {
-          "appId": "paasdemo",
+          "appId": "contoso",
           "costCenter": "abc123"
         }
       }
     }
-  }
+}
 ```
 
 Update the following values:
@@ -73,8 +73,8 @@ Next, run the following command to deploy the data tier:
 
 ```bash
 bicep build data.bicep
-az group create --name paasdemo-data --location centralus
-az deployment group create --resource-group paasdemo-data --name appdeployment --template-file data.json --parameters application.params.json
+az group create --name contoso-data --location centralus
+az deployment group create --resource-group contoso-data --name datatier --template-file data.json --parameters data.params.json
 ```
 
 ## Deploy Application Code

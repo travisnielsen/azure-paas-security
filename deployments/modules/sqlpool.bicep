@@ -14,7 +14,7 @@ var blocContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 var sqlDefenderContainerName = 'defender'
 
 resource auditstorage 'Microsoft.Storage/storageAccounts@2019-06-01' = {
-  name: 'sqlops${sqlServerName}'
+  name: 'sqlops${uniqueString(resourceGroup().id)}'
   location: resourceGroup().location
   sku: {
     name: 'Standard_LRS'
