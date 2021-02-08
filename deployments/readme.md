@@ -50,7 +50,7 @@ az deployment sub create --name core --location centralus --template-file core.j
 
 ## Deploy Application Infrastructure
 
-In the `deployments` directory, create a new file called `data.params.json` and place the following contents into the file:
+In the `deployments` directory, create a new file called `application.params.json` and place the following contents into the file:
 
 ```json
 {
@@ -84,9 +84,9 @@ Update the following values:
 Next, run the following command to deploy the data tier:
 
 ```bash
-bicep build data.bicep
+bicep build application.bicep
 az group create --name contoso-data --location centralus
-az deployment group create --resource-group contoso-data --name datatier --template-file data.json --parameters data.params.json
+az deployment group create --resource-group contoso-data --name datatier --template-file application.json --parameters application.params.json
 ```
 
 ## Deploy Application Logic
