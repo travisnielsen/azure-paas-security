@@ -4,6 +4,7 @@ env:
   LOCATION: centralus
   APP_PREFIX: wbademo
   SQL_ADMIN_OBJECT_ID: da40d0a0-5874-4dfa-885d-f56d0c9b674b
+  SQL_ADMIN_LOGIN_NAME: paasdemo
 
 on:
   issue_comment:
@@ -92,7 +93,7 @@ jobs:
             appPrefix         = "${{ env.APP_PREFIX }}"
             vmAdminPwd        = "${{ secrets.VM_ADMIN_PASSWORD }}"
             sqlAdminObjectId  = "${{ env.SQL_ADMIN_OBJECT_ID }}"
-            sqlAdminLoginName = "groot"
+            sqlAdminLoginName = "${{ env.SQL_ADMIN_LOGIN_NAME }}"
             vmAdminUserName   = "groot"
           }
 
