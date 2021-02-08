@@ -31,16 +31,18 @@ param vmAdminPwd string {
 }
 
 // Network Watcher
-param networkWatcherName string = 'NetworkWatcher_${environment}_centralus'
+param networkWatcherName string = 'NetworkWatcher_centralus'
 
 resource netrg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: '${appPrefix}-${environment}-network'
   location: region
+  tags: tags
 }
 
 resource desktoprg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: '${appPrefix}-${environment}-desktop'
   location: region
+  tags: tags
 }
 
 // Deploy Action Group for monitoring/alerting
