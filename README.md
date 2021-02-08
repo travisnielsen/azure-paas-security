@@ -54,7 +54,6 @@ The messages that are issues must be on a single line and have the following syn
 |`core`| `core.yml` | Deploys all core infra component | During a PR request simply type `/core:{environment}` to test and validate |
 |`monitoring`| `monitoring.yml` | Deploys all monitoring component (diagnostics, alerts & dashboard) | During a PR request simply type `/monitoring:{environment}` to test and validate monitoring |
 |`app`| `app.yml` | Deploys all app infrastructure | During a PR request simply type `/app:{environment}` to test and validate |
-|`data`| `data.yml` | Deploys all data infrastructure | During a PR request simply type `/data:{environment}` to test and validate |
 |`full`| `ci-cd.yml` | Triggers full deployment pipeline | During a PR request simply type `/full:{environment}` to deploy whole environment |
 |`teardown`| `teardown.yml` | Tear down entire environment | During a PR request simply type `/teardown:{environment}` to delete all resource groups |
 
@@ -98,4 +97,6 @@ The following is a list of parameters needed at runtime to run/provision the env
 |---|---|---|---|
 |`LOCATION`| `centralus` | string | Deployment region |
 |`APP_PREFIX`| `wbademo` | string | App prefix name |
-|`SQL_ADMIN_OBJECT_ID`|  | string | Name The object Id of the user - needed for SQL |
+|`SQL_ADMIN_OBJECT_ID`| | string | Name The object Id of the user - needed for SQL |
+|`SQL_ADMIN_LOGIN_NAME`| | string | SQL admin user name |
+|`SQL_ADMIN_PASSWORD`| `${{ env.SQL_ADMIN_PASSWORD }}` | secureString | Create a secret in your repo settings. Sql admin password |

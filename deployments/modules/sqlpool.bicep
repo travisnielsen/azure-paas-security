@@ -7,7 +7,7 @@ param adminObjectId string
 param resourceGroupNameNetwork string
 param vnetNamePrivateEndpoint string
 param subnetNamePrivateEndpoint string
-param logAnalyticsWorkspaceId string
+//param logAnalyticsWorkspaceId string
 param tags object
 
 var blocContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
