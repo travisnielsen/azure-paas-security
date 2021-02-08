@@ -475,7 +475,7 @@ module route 'modules/udr.bicep' = {
   name: 'udr'
   scope: resourceGroup(netrg.name)
   params: {
-    name: '${appPrefix}-${environment}-udr'
+    name: '${appPrefix}-${environment}-${region}-app'
     azFwlIp: hubAzFw.outputs.privateIp
   }
 }
