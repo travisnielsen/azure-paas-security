@@ -28,7 +28,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2020-08-01' = {
 }
 
 resource spokensg 'Microsoft.Network/networkSecurityGroups@2020-06-01' = {
-  name: name
+  name: '${name}-nsg'
   location: resourceGroup().location
   properties: {
     securityRules: securityRules

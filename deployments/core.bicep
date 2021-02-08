@@ -15,6 +15,7 @@ param tags object = {
 }
 
 // HUB VNET IP SETTINGS
+param vnetName string = '${appPrefix}-${region}-${environment}'
 param bastionSubnetAddressPrefix string = '10.10.0.128/25'  // 123 addresses - 10.10.0.128 - 10.10.0.255
 param desktopSubnetAddressPrefix string = '10.10.1.0/25'    // 123 addresses - 10.10.1.0 - 10.10.1.127
 
@@ -59,7 +60,7 @@ module hubVnet 'modules/vnet.bicep' = {
   name: 'hub-${environment}-vnet'
   scope: resourceGroup(netrg.name)
   params: {
-    vnetName: '${appPrefix}-${environment}-hub'
+    vnetName: '${vnetName}-hub'
     addressSpaces: [
       '10.10.0.0/20'
     ]
@@ -90,7 +91,7 @@ module spokeVnet 'modules/vnet.bicep' = {
   name: 'spoke-${environment}-vnet'
   scope: resourceGroup(netrg.name)
   params: {
-    vnetName: '${appPrefix}-${environment}-app'
+    vnetName: '${vnetName}-app'
     addressSpaces: [
       spokeVnetAddressSpace
     ]
@@ -664,7 +665,7 @@ module applyUdrForDesktop 'modules/vnet.bicep' = {
     route
   ]
   params: {
-    vnetName: '${appPrefix}-${environment}-hub'
+    vnetName: '${vnetName}-hub'
     addressSpaces: [
       '10.10.0.0/20'
     ]
@@ -707,7 +708,7 @@ module vm 'modules/vm-win10.bicep' = {
   params: {
     vmName: '${uniqueString(desktoprg.id)}01'
     networkResourceGroupName: netrg.name
-    vnetName: '${appPrefix}-${environment}-hub'
+    vnetName: '${vnetName}-hub'
     subnetName: 'desktop'
     adminUserName: vmAdminUserName
     adminPassword: vmAdminPwd

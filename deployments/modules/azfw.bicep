@@ -5,7 +5,7 @@ param desktopSubnetCidr string
 param devopsSubnetCidr string
 
 resource publicIp 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
-  name: '${prefix}-azfw-ip'
+  name: '${prefix}-azfw-pip'
   location: resourceGroup().location
   properties: {
     publicIPAddressVersion: 'IPv4'
@@ -123,7 +123,7 @@ resource firewallHealth 'microsoft.insights/metricAlerts@2018-03-01' = {
     }
     autoMitigate: true
     targetResourceType: 'Microsoft.Network/azureFirewalls'
-    targetResourceRegion: 'centralus'
+    targetResourceRegion: resourceGroup().location
     actions: [
       {
         actionGroupId: actionGroupId
@@ -172,7 +172,7 @@ resource applicationRuleHitCount 'microsoft.insights/metricAlerts@2018-03-01' = 
     }
     autoMitigate: true
     targetResourceType: 'Microsoft.Network/azureFirewalls'
-    targetResourceRegion: 'centralus'
+    targetResourceRegion: resourceGroup().location
     actions: [
       {
         actionGroupId: actionGroupId
@@ -221,7 +221,7 @@ resource networkRuleHitCount 'microsoft.insights/metricAlerts@2018-03-01' = {
     }
     autoMitigate: true
     targetResourceType: 'Microsoft.Network/azureFirewalls'
-    targetResourceRegion: 'centralus'
+    targetResourceRegion: resourceGroup().location
     actions: [
       {
         actionGroupId: actionGroupId

@@ -4,7 +4,7 @@ param tags object
 
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2019-06-01' = {
-  name: accountName
+  name: '${accountName}storg'
   location: resourceGroup().location
   sku: {
     name: 'Standard_LRS'

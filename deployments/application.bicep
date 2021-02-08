@@ -31,7 +31,7 @@ var sqlServerName = '${uniqueString(resourceGroup().id)}-${environment}-sql'
 var dataFactoryName = '${uniqueString(resourceGroup().id)}-${environment}-df'
 var storageAccountName = '${uniqueString(resourceGroup().id)}${environment}storg'
 
-var logAnalyticsName = '${uniqueString(resourceGroup().id)}-${environment}-log'
+var logAnalyticsName = '${uniqueString(resourceGroup().id)}-${environment}'
 
 /*
  *  Storage account
