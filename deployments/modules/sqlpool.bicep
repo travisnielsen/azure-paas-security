@@ -230,7 +230,7 @@ resource sqlHighCPU 'Microsoft.Insights/metricAlerts@2018-03-01' = {
     enabled: true
     evaluationFrequency: 'PT5M'
     scopes: [
-      resourceId('Microsoft.Sql/servers/databases', sqldb.name)
+      sqldb.id
     ]
     severity: 4
     targetResourceType: 'Microsoft.Sql/servers/databases'
@@ -274,7 +274,7 @@ resource failedConnections 'Microsoft.Insights/metricAlerts@2018-03-01' = {
     enabled: true
     evaluationFrequency: 'PT5M'
     scopes: [
-      resourceId('Microsoft.Sql/servers/databases', sqldb.name)
+      sqldb.id
     ]
     severity: 4
     targetResourceType: 'Microsoft.Sql/servers/databases'
@@ -318,7 +318,7 @@ resource highDTU 'Microsoft.Insights/metricAlerts@2018-03-01' = {
     enabled: true
     evaluationFrequency: 'PT5M'
     scopes: [
-      resourceId('Microsoft.Sql/servers/databases', sqldb.name)
+      sqldb.id
     ]
     severity: 4
     targetResourceType: 'Microsoft.Sql/servers/databases'
