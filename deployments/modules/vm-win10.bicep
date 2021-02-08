@@ -76,11 +76,13 @@ resource vm 'Microsoft.Compute/virtualMachines@2020-06-01' = {
         version: 'latest'
       }
       osDisk: {
+        name: '${vmName}-os'
         caching: 'ReadWrite'
         createOption: 'FromImage'
       }
       dataDisks: [
         {
+          name: '${vmName}-dataDisk'
           diskSizeGB: 1023
           lun: 0
           createOption: 'Empty'
