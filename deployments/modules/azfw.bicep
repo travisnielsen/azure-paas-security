@@ -3,6 +3,7 @@ param hubId string
 param actionGroupId string
 param desktopSubnetCidr string
 param devopsSubnetCidr string
+param azPaasSubnetCidr string
 
 resource publicIp 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
   name: '${prefix}-azfw-ip'
@@ -56,6 +57,23 @@ resource fwl 'Microsoft.Network/azureFirewalls@2020-06-01' = {
               ]
               destinationPorts: [
                 '80'
+                '443'
+              ]
+            }
+            {
+              description: 'Allow SQL and SSL from desktop to app subnet'
+              name: 'desktop-app-admin'
+              protocols: [
+                'TCP'
+              ]
+              sourceAddresses: [
+                desktopSubnetCidr
+              ]
+              destinationAddresses: [
+                azPaasSubnetCidr
+              ]
+              destinationPorts: [
+                '1433'
                 '443'
               ]
             }
@@ -123,7 +141,7 @@ resource firewallHealth 'microsoft.insights/metricAlerts@2018-03-01' = {
     }
     autoMitigate: true
     targetResourceType: 'Microsoft.Network/azureFirewalls'
-    targetResourceRegion: 'centralus'
+    targetResourceRegion: resourceGroup().location
     actions: [
       {
         actionGroupId: actionGroupId
@@ -172,7 +190,7 @@ resource applicationRuleHitCount 'microsoft.insights/metricAlerts@2018-03-01' = 
     }
     autoMitigate: true
     targetResourceType: 'Microsoft.Network/azureFirewalls'
-    targetResourceRegion: 'centralus'
+    targetResourceRegion: resourceGroup().location
     actions: [
       {
         actionGroupId: actionGroupId
@@ -221,7 +239,7 @@ resource networkRuleHitCount 'microsoft.insights/metricAlerts@2018-03-01' = {
     }
     autoMitigate: true
     targetResourceType: 'Microsoft.Network/azureFirewalls'
-    targetResourceRegion: 'centralus'
+    targetResourceRegion: resourceGroup().location
     actions: [
       {
         actionGroupId: actionGroupId

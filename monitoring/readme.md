@@ -33,6 +33,10 @@ Below is a list of alerts per resource:
 
 ### Azure SQL
 
+- dwu_used
+- connection_failed
+- cpu_percent
+
 ### Data factory
 
 - ActivityFailedRuns
@@ -43,6 +47,9 @@ Below is a list of alerts per resource:
 
 - Smart detection: this is enabled by default. Learn [more](https://docs.microsoft.com/en-us/azure/azure-monitor/app/proactive-arm-config#smart-detection-rule-names)
 
+### Azure Bastion
+
+
 ## Dashboards
 
 For this POC environemnt, Azure dashbaords are being used for visualization purposes. While some resources already come with full felged dashboards upon deployment, others do not. So, are developing custom dashboards using Azure workbooks for resources that do not currenly support this natively.
@@ -51,6 +58,7 @@ For this POC environemnt, Azure dashbaords are being used for visualization purp
 | --- | --- | --- |
 | Data Factory | Pipeline, activity, trigger runs, Errors | Azure Monitor |
 | Azure Firewall |  | Azure Monitor |
+| Azure SQL db | CPU, DTW (utilization), failures | Azure Monitor |
 | Application insights | Availability, Failure, Performance, Usage | Azure monitor |
 | Virtual machines | Insights - Performance, Metrics (CPU, Disk, Network | Azure monitor |
 | Network | Network health, Connectivity, Traffic | Azure monitor |
