@@ -29,6 +29,7 @@ jobs:
         pattern="^\/app\:(\w+)$"
         [[ "${{ github.event.comment.body }}" =~ $pattern ]]
         echo "ENVIRONMENT=${BASH_REMATCH[1]}" >> $GITHUB_ENV
+        echo "WORKFLOW_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> $GITHUB_ENV
 
     # Install the latest release of the bicep CLI
     - name: Install bicep CLI
@@ -52,6 +53,8 @@ jobs:
         body: |
           Hey, @${{ github.event.comment.user.login }}!
           :rocket: Deploying app infra to ${{ env.ENVIRONMENT }} is beginning! :rocket:
+          
+          Workflow URL - ${{ env.WORKFLOW_URL }}
 
     - name: 'Login via Az module'
       uses: azure/login@v1
@@ -87,7 +90,7 @@ jobs:
 
           Write-Verbose "Deploying..."
           New-AzResourceGroupDeployment -TemplateFile ./deployments/application.json `
-              -ResourceGroupName '${{ env.RESOURCE_GROUP_NAME }}' `
+              -ResourceGroupName "$rgName" `
               -TemplateParameterObject $additionalParams `
               -Verbose
 
@@ -99,3 +102,5 @@ jobs:
         body: |
           Hey, @${{ github.event.comment.user.login }}!
           :tada: App infra deployment to ${{ env.ENVIRONMENT }} completed! :tada:
+
+          Workflow URL - ${{ env.WORKFLOW_URL }}
