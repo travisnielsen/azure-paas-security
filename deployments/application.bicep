@@ -29,7 +29,7 @@ var vnetName = '${appPrefix}-${region}-${environment}-app'
 
 var sqlServerName = '${uniqueString(resourceGroup().id)}-${environment}-sql'
 var dataFactoryName = '${uniqueString(resourceGroup().id)}-${environment}-df'
-var storageAccountName = '${uniqueString(resourceGroup().id)}${environment}storg'
+var storageAccountName = '${uniqueString(resourceGroup().id)}'
 
 var logAnalyticsName = '${uniqueString(resourceGroup().id)}-${environment}'
 
@@ -138,7 +138,7 @@ module dataFactoryPrivateEndpoint 'modules/privateendpoint.bicep' = {
     dataFactory
   ]
   params: {
-    privateEndpointName: '${dataFactory.name}-${environment}-dataFactoryEndpoint'
+    privateEndpointName: '${dataFactory.name}-dataFactoryEndpoint'
     serviceResourceId: dataFactory.id
     resourceGroupNameNetwork: networkResourceGroupName
     vnetName: vnetName
@@ -250,7 +250,7 @@ resource roleAssignmentName 'Microsoft.Authorization/roleAssignments@2020-04-01-
   ]
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
-    principalId: dataFactory.identity.principalId
+    principalId: reference(dataFactory.id, '2018-06-01', 'full').identity.principalId
   }
   scope: storageAccount
 }
