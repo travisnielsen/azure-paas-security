@@ -12,7 +12,7 @@ param sqlDatabaseSKU string = 'DW100c'
 var subscriptionId = subscription().subscriptionId
 var region = resourceGroup().location
 var networkResourceGroupName = '${appPrefix}-network'
-var vnetName = '${appPrefix}-${region}-app'
+var vnetName = '${appPrefix}-app'
 
 var sqlServerName = '${uniqueString(resourceGroup().id)}-sql'
 var dataFactoryName = '${uniqueString(resourceGroup().id)}-df'
