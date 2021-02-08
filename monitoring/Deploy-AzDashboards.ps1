@@ -33,11 +33,10 @@ function Deploy-AzDashboards {
     }
 
     process {
-        
         $paths = (Get-ChildItem -Path "./monitoring" -Recurse -Filter "*.dashboard.json").FullName
 
         Write-Verbose 'Starting alerts/dashboard deployments...' -Verbose
-        
+
         foreach ($path in $paths) {
            $deploymentInputsArgs = @{
                TemplateFile = "$path"
@@ -60,7 +59,7 @@ function Deploy-AzDashboards {
                        Write-Host ("##vso[task.setvariable variable={0};isOutput=true]{1}" -f $outputkey, $result.Outputs[$outputkey].Value)
                    }
               }
-            
+
               Write-Verbose "Deployment successful" -Verbose
            }
         }
