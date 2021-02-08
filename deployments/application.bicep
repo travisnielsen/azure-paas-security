@@ -27,18 +27,12 @@ var subscriptionId = subscription().subscriptionId
 var networkResourceGroupName = '${appPrefix}-${environment}-network'
 var vnetName = '${appPrefix}-${environment}-${region}-app'
 
+/*
 var storageAccountName = concat(uniqueString(resourceGroupData.id), environment)
 var dataFactoryName = concat(uniqueString(resourceGroupData.id), environment)
 var sqlServerName = concat(uniqueString(resourceGroupData.id), environment)
-
-/*
-var tags = {
-  AppID: 'paasdemo'
-  CostCenter: 'abc123'
-}
 */
 
-// Create Resource Groups
 resource resourceGroupUtil 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: '${appPrefix}-${environment}-util'
   location: region
@@ -88,6 +82,7 @@ module appInsights 'modules/appinsights.bicep' = {
   }
 }
 
+/*
 module dataTier 'modules/datatier.bicep' = {
   name: 'dataTier'
   scope: resourceGroup(resourceGroupData.name)
@@ -102,9 +97,12 @@ module dataTier 'modules/datatier.bicep' = {
     sqlAdminObjectId: sqlAdminObjectId
     sqlServerName: sqlServerName
     sqlAdminLoginPwd: vmAdminPwd
-    actionGroupId: actionGroup.outputs.id
+    sqlDatabaseName: 'AdventureWorksLT'
+    sqlDatabaseSKU: 'DW100c'
+    logAnalyticsWorkspaceId: logAnalytics.outputs.id
   }
 }
+*/
 
 // Virtual Machine
 module vm 'modules/vm-win10.bicep' = {
