@@ -1,0 +1,90 @@
+name: App-Infra-DEPLOY
+
+env:
+  LOCATION: centralus
+  ACTION_GROUP_NAME: WBADemoAdmin
+  APP_PREFIX: wbademo
+  SQL_ADMIN_OBJECT_ID: da40d0a0-5874-4dfa-885d-f56d0c9b674b
+
+on:
+  issue_comment:
+    types: [ created, edited ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: contains(github.event.comment.body, '/app:')
+
+    steps:
+    # checkout - remember we have to check out the PR code!
+    - uses: actions/checkout@v2
+    - name: Checkout PR code
+      uses: dawidd6/action-checkout-pr@v1
+      with:
+        pr: ${{ github.event.issue.number }}
+
+    - name: "Set env variables from chat message"
+      run: |
+        pattern="^\/app\:(\w+)$"
+        [[ "${{ github.event.comment.body }}" =~ $pattern ]]
+        echo "ENVIRONMENT=${BASH_REMATCH[1]}" >> $GITHUB_ENV
+
+    # Install the latest release of the bicep CLI
+    - name: Install bicep CLI
+      run: |
+        curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+        chmod +x ./bicep
+        sudo mv ./bicep /usr/local/bin/bicep
+        bicep --help
+
+    # Transpile bicep file into ARM template
+    - name: Build ARM Template from bicep file
+      run: |
+        bicep build ./deployments/application.bicep
+        dir
+
+    - name: Create starting comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.issue.number }}
+        body: |
+          Hey, @${{ github.event.comment.user.login }}!
+          :rocket: Deploying app infra to ${{ env.ENVIRONMENT }} is beginning! :rocket:
+
+    - name: 'Login via Az module'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        enable-AzPSSession: true
+
+    # Deploy template
+    - name: Deploy template
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: latest
+        inlineScript: |
+          # deploy infra resources
+          $additionalParams = @{
+            appPrefix         = "${{ env.APP_PREFIX }}"
+            environment       = "${{ env.ENVIRONMENT }}"
+            vmAdminPwd        = "${{ secrets.VM_ADMIN_PASSWORD }}"
+            sqlAdminObjectId  = "${{ env.SQL_ADMIN_OBJECT_ID }}"
+            sqlAdminLoginName = "groot"
+            vmAdminUserName   = "groot"
+          }
+
+          Write-Verbose "Deploying..."
+          New-AzDeployment -TemplateFile ./deployments/application.json `
+              -Location '${{ env.LOCATION }}' `
+              -TemplateParameterObject $additionalParams `
+              -Verbose
+
+    - name: Create completed comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.issue.number }}
+        body: |
+          Hey, @${{ github.event.comment.user.login }}!
+          :tada: App infra deployment to ${{ env.ENVIRONMENT }} completed! :tada:

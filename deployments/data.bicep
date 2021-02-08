@@ -3,6 +3,13 @@ param tags object
 param sqlAdminLoginName string
 param sqlAdminLoginPwd string
 param sqlAdminObjectId string
+param environment string {
+  allowed: [
+    'dev'
+    'uat'
+    'prod'
+  ]
+}
 
 param storageContainerName string = 'testdata'
 param sqlDatabaseName string = 'nytaxi'
@@ -11,11 +18,11 @@ param sqlDatabaseSKU string = 'DW100c'
 // VNet integration
 var subscriptionId = subscription().subscriptionId
 var region = resourceGroup().location
-var networkResourceGroupName = '${appPrefix}-network'
-var vnetName = '${appPrefix}-${region}-app'
+var networkResourceGroupName = '${appPrefix}-${environment}-network'
+var vnetName = '${appPrefix}-${environment}-${region}-app'
 
-var sqlServerName = '${uniqueString(resourceGroup().id)}-sql'
-var dataFactoryName = '${uniqueString(resourceGroup().id)}-df'
+var sqlServerName = '${uniqueString(resourceGroup().id)}-${environment}-sql'
+var dataFactoryName = '${uniqueString(resourceGroup().id)}-${environment}-df'
 
 /*
  *  Storage account
@@ -44,7 +51,7 @@ resource container 'Microsoft.Storage/storageAccounts/blobServices/containers@20
 
 /*
  *  Log Analytics
- */
+*/
 module logAnalytics 'modules/loganalytics.bicep' = {
   name: 'logAnalytics'
   params: {
@@ -134,7 +141,7 @@ module dataFactoryPrivateEndpoint 'modules/privateendpoint.bicep' = {
 
 resource dataFactoryManagedVNET 'Microsoft.DataFactory/factories/managedVirtualNetworks@2018-06-01' = {
   name: '${dataFactory.name}/default'
-  properties: { 
+  properties: {
   }
 }
 
