@@ -86,7 +86,7 @@ Next, run the following command to deploy the data tier:
 ```bash
 bicep build data.bicep
 az group create --name contoso-data --location centralus
-az deployment group create --resource-group contoso-data --name data-tier --template-file application.json --parameters application.params.json
+az deployment group create --resource-group contoso-data --name datatier --template-file data.json --parameters data.params.json
 ```
 
 ## Deploy Application Logic
