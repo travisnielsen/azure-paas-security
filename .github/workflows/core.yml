@@ -26,6 +26,7 @@ jobs:
         pattern="^\/core\:(\w+)$"
         [[ "${{ github.event.comment.body }}" =~ $pattern ]]
         echo "ENVIRONMENT=${BASH_REMATCH[1]}" >> $GITHUB_ENV
+        echo "WORKFLOW_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> $GITHUB_ENV
 
     - name: Create starting comment
       uses: peter-evans/create-or-update-comment@v1
@@ -36,7 +37,7 @@ jobs:
           Hey, @${{ github.event.comment.user.login }}!
           :rocket: Deploying core infra to ${{ env.ENVIRONMENT }} is beginning! :rocket:
 
-          Workflow url = $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          Workflow URL - ${{ env.WORKFLOW_URL }}
 
     # Install the latest release of the bicep CLI
     - name: Install bicep CLI
@@ -85,4 +86,4 @@ jobs:
           Hey, @${{ github.event.comment.user.login }}!
           :tada: Core infra deployment to ${{ env.ENVIRONMENT }} completed! :tada:
 
-          Workflow url = $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          Workflow URL - ${{ env.WORKFLOW_URL }}
