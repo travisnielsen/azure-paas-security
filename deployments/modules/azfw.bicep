@@ -1,7 +1,8 @@
 param prefix string
 param hubId string
-param utilSubnetCidr string
 param actionGroupId string
+param desktopSubnetCidr string
+param devopsSubnetCidr string
 
 resource publicIp 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
   name: '${prefix}-azfw-ip'
@@ -42,13 +43,13 @@ resource fwl 'Microsoft.Network/azureFirewalls@2020-06-01' = {
           priority: 100
           rules: [
             {
-              description: 'Allow outbound web traffic for util subnet'
-              name: 'util-outbound-all'
+              description: 'Allow outbound web traffic for desktop subnet'
+              name: 'desktop-outbound-all'
               protocols: [
                 'TCP'
               ]
               sourceAddresses: [
-                utilSubnetCidr
+                desktopSubnetCidr
               ]
               destinationAddresses: [
                 '*'
@@ -58,6 +59,24 @@ resource fwl 'Microsoft.Network/azureFirewalls@2020-06-01' = {
                 '443'
               ]
             }
+            {
+              description: 'Allow outbound web traffic for devops subnet'
+              name: 'devops-outbound-all'
+              protocols: [
+                'TCP'
+              ]
+              sourceAddresses: [
+                devopsSubnetCidr
+              ]
+              destinationAddresses: [
+                '*'
+              ]
+              destinationPorts: [
+                '80'
+                '443'
+              ]
+            }
+
           ]
         }
       }
