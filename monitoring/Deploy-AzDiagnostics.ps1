@@ -36,6 +36,9 @@ function Deploy-AzDiagnostics {
         if ($workspace) {
             $workspaceId = $workspace.ResourceId
         }
+        else {
+            Write-Error "Failed to find resource group - $WorkspaceResourceGroup" -ErrorAction Stop
+        }
 
         Write-Verbose "Work space resource Id - $workspaceId"
 
