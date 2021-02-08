@@ -705,7 +705,7 @@ module vm 'modules/vm-win10.bicep' = {
     applyUdrForDesktop
   ]
   params: {
-    vmName: '${uniqueString(desktoprg.id)}${environment}01'
+    vmName: '${uniqueString(desktoprg.id)}01'
     networkResourceGroupName: netrg.name
     vnetName: '${appPrefix}-${environment}-hub'
     subnetName: 'desktop'
