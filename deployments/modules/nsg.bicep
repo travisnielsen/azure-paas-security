@@ -17,7 +17,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2020-08-01-preview' =
 }
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2020-08-01' = {
-  name: '${uniqueString(resourceGroup().id)}-log'
+  name: '${uniqueString(resourceGroup().id)}'
   location: resourceGroup().location
   properties: {
     retentionInDays: 30
@@ -28,7 +28,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2020-08-01' = {
 }
 
 resource spokensg 'Microsoft.Network/networkSecurityGroups@2020-06-01' = {
-  name: '${name}-nsg'
+  name: name
   location: resourceGroup().location
   properties: {
     securityRules: securityRules

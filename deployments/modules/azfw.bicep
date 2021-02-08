@@ -6,7 +6,7 @@ param devopsSubnetCidr string
 param azPaasSubnetCidr string
 
 resource publicIp 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
-  name: '${prefix}-azfw-pip'
+  name: '${prefix}-azfw-ip'
   location: resourceGroup().location
   properties: {
     publicIPAddressVersion: 'IPv4'
