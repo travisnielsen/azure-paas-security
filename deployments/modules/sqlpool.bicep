@@ -8,6 +8,7 @@ param resourceGroupNameNetwork string
 param vnetNamePrivateEndpoint string
 param subnetNamePrivateEndpoint string
 //param logAnalyticsWorkspaceId string
+param actionGroupId string
 param tags object
 
 var blocContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
@@ -131,12 +132,12 @@ resource auditsettings 'Microsoft.Sql/servers/auditingSettings@2017-03-01-previe
     // sqlServerDiagnosticSettings
   ]
   properties: {
-     state: 'Enabled'
-     storageEndpoint: auditstorage.properties.primaryEndpoints.blob
-     storageAccountSubscriptionId: subscription().subscriptionId
-     isStorageSecondaryKeyInUse: false
-     isAzureMonitorTargetEnabled: false
-     auditActionsAndGroups: [
+    state: 'Enabled'
+    storageEndpoint: auditstorage.properties.primaryEndpoints.blob
+    storageAccountSubscriptionId: subscription().subscriptionId
+    isStorageSecondaryKeyInUse: false
+    isAzureMonitorTargetEnabled: false
+    auditActionsAndGroups: [
       'BATCH_COMPLETED_GROUP'
       'FAILED_DATABASE_AUTHENTICATION_GROUP'
       'DATABASE_OBJECT_OWNERSHIP_CHANGE_GROUP'
@@ -144,7 +145,7 @@ resource auditsettings 'Microsoft.Sql/servers/auditingSettings@2017-03-01-previe
       'DATABASE_PERMISSION_CHANGE_GROUP'
       'DATABASE_PRINCIPAL_CHANGE_GROUP'
       'DATABASE_ROLE_MEMBER_CHANGE_GROUP'
-     ]
+    ]
   }
 }
 
@@ -184,7 +185,7 @@ resource sqldb 'Microsoft.Sql/servers/databases@2020-08-01-preview' = {
     sqlserver
   ]
   sku: {
-    name: sqlPoolSKU  // DW100c
+    name: sqlPoolSKU // DW100c
     tier: 'DataWarehouse'
   }
   properties: {
@@ -192,6 +193,141 @@ resource sqldb 'Microsoft.Sql/servers/databases@2020-08-01-preview' = {
     // sampleName: 'AdventureWorksLT'
     // sampleName: 'WideWorldImportersFull'
   }
+}
+
+/*
+Metric alerts for SQL db
+*/
+resource sqlHighCPU 'Microsoft.Insights/metricAlerts@2018-03-01' = {
+  name: 'SQL Server CPU percentage is high'
+  location: 'global'
+  properties: {
+    actions: [
+      {
+        actionGroupId: actionGroupId
+      }
+    ]
+    autoMitigate: true
+    criteria: {
+      allOf: [
+        {
+          alertSensitivity: 'Medium'
+          failingPeriods: {
+            numberOfEvaluationPeriods: 4
+            minFailingPeriodsToAlert: 4
+          }
+          name: 'Metric1'
+          metricNamespace: 'Microsoft.Sql/servers/databases'
+          metricName: 'cpu_percent'
+          operator: 'GreaterOrLessThan'
+          timeAggregation: 'Average'
+          criterionType: 'DynamicThresholdCriterion'
+        }
+      ]
+      'odata.type': 'Microsoft.Azure.Monitor.MultipleResourceMultipleMetricCriteria'
+    }
+    description: 'SQL server CPU is higher than normal'
+    enabled: true
+    evaluationFrequency: 'PT5M'
+    scopes: [
+      resourceId('Microsoft.Sql/servers/databases', sqldb.name)
+    ]
+    severity: 4
+    targetResourceType: 'Microsoft.Sql/servers/databases'
+    windowSize: 'PT5M'
+  }
+  dependsOn: [
+    sqlserver
+    sqldb
+  ]
+}
+
+resource failedConnections 'Microsoft.Insights/metricAlerts@2018-03-01' = {
+  name: 'Total failed connections'
+  location: 'global'
+  properties: {
+    actions: [
+      {
+        actionGroupId: actionGroupId
+      }
+    ]
+    autoMitigate: true
+    criteria: {
+      allOf: [
+        {
+          alertSensitivity: 'Medium'
+          failingPeriods: {
+            numberOfEvaluationPeriods: 4
+            minFailingPeriodsToAlert: 4
+          }
+          name: 'Metric2'
+          metricNamespace: 'Microsoft.Sql/servers/databases'
+          metricName: 'connection_failed'
+          operator: 'GreaterOrLessThan'
+          timeAggregation: 'Total'
+          criterionType: 'DynamicThresholdCriterion'
+        }
+      ]
+      'odata.type': 'Microsoft.Azure.Monitor.MultipleResourceMultipleMetricCriteria'
+    }
+    description: 'SQL server total failed connections'
+    enabled: true
+    evaluationFrequency: 'PT5M'
+    scopes: [
+      resourceId('Microsoft.Sql/servers/databases', sqldb.name)
+    ]
+    severity: 4
+    targetResourceType: 'Microsoft.Sql/servers/databases'
+    windowSize: 'PT5M'
+  }
+  dependsOn: [
+    sqlserver
+    sqldb
+  ]
+}
+
+resource highDTU 'Microsoft.Insights/metricAlerts@2018-03-01' = {
+  name: 'DTU Utilization is over threshold'
+  location: 'global'
+  properties: {
+    actions: [
+      {
+        actionGroupId: actionGroupId
+      }
+    ]
+    autoMitigate: true
+    criteria: {
+      allOf: [
+        {
+          alertSensitivity: 'Medium'
+          failingPeriods: {
+            numberOfEvaluationPeriods: 4
+            minFailingPeriodsToAlert: 4
+          }
+          name: 'Metric3'
+          metricNamespace: 'Microsoft.Sql/servers/databases'
+          metricName: 'dwu_used'
+          operator: 'GreaterOrLessThan'
+          timeAggregation: 'Maximum'
+          criterionType: 'DynamicThresholdCriterion'
+        }
+      ]
+      'odata.type': 'Microsoft.Azure.Monitor.MultipleResourceMultipleMetricCriteria'
+    }
+    description: 'SQL server DTU Utilization is over threshold'
+    enabled: true
+    evaluationFrequency: 'PT5M'
+    scopes: [
+      resourceId('Microsoft.Sql/servers/databases', sqldb.name)
+    ]
+    severity: 4
+    targetResourceType: 'Microsoft.Sql/servers/databases'
+    windowSize: 'PT5M'
+  }
+  dependsOn: [
+    sqlserver
+    sqldb
+  ]
 }
 
 output id string = sqlserver.id
