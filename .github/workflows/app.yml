@@ -71,13 +71,12 @@ jobs:
           # deploy infra resources
           $additionalParams = @{
             appPrefix         = "${{ env.APP_PREFIX }}"
-            environment       = "${{ env.ENVIRONMENT }}"
             sqlAdminObjectId  = "${{ env.SQL_ADMIN_OBJECT_ID }}"
             sqlAdminLoginName = "${{ env.SQL_ADMIN_LOGIN_NAME }}"
             sqlAdminLoginPwd  = "${{ secrets.SQL_ADMIN_PASSWORD }}"
           }
 
-          $rgName = "${{ env.APP_PREFIX}}-${{ env.ENVIRONMENT }}-app"
+          $rgName = "${{ env.APP_PREFIX}}-app"
           $rg = Get-AzResourceGroup -ErrorAction SilentlyContinue | Where-Object { $_.ResourceGroupName -like "$rgName*" }
           if ($null -eq $rg) {
             Write-Verbose "Resource group - $rgName does not exist, creating..." -Verbose

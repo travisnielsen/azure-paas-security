@@ -73,7 +73,6 @@ jobs:
           # deploy infra resources
           $additionalParams = @{
             appPrefix   = "${{ env.APP_PREFIX }}"
-            environment = "${{ env.ENVIRONMENT }}"
           }
 
           Write-Verbose "Deploying network..."
@@ -91,7 +90,6 @@ jobs:
           # deploy infra resources
           $additionalParams = @{
             appPrefix         = "${{ env.APP_PREFIX }}"
-            environment       = "${{ env.ENVIRONMENT }}"
             vmAdminPwd        = "${{ secrets.VM_ADMIN_PASSWORD }}"
             sqlAdminObjectId  = "${{ env.SQL_ADMIN_OBJECT_ID }}"
             sqlAdminLoginName = "groot"
@@ -114,7 +112,7 @@ jobs:
 
           # Invoke
           $functionInput = @{
-             WorkspaceResourceGroup = '${{ env.APP_PREFIX }}-${{ env.ENVIRONMENT }}-app'
+             WorkspaceResourceGroup = '${{ env.APP_PREFIX }}-app'
           }
 
           Deploy-AzDiagnostics @functionInput -Verbose
@@ -129,7 +127,7 @@ jobs:
 
           # Invoke
           $functionInput = @{
-             ResourceGroupName = '${{ env.APP_PREFIX }}-${{ env.ENVIRONMENT }}-app'
+             ResourceGroupName = '${{ env.APP_PREFIX }}-app'
           }
 
           Deploy-AzDashboards @functionInput -Verbose

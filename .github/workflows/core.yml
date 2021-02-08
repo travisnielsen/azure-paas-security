@@ -67,7 +67,6 @@ jobs:
           # deploy infra resources
           $additionalParams = @{
             appPrefix   = "${{ env.APP_PREFIX }}"
-            environment = "${{ env.ENVIRONMENT }}"
             vmAdminPwd  = "${{ secrets.VM_ADMIN_PASSWORD }}"
           }
 
