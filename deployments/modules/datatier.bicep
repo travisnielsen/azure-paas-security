@@ -24,8 +24,15 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2019-06-01' = {
   tags: tags
 }
 
-resource container 'Microsoft.Storage/storageAccounts/blobServices/containers@2019-06-01' = {
-  name: '${storageAccountName}/default/${storageContainerName}'
+module storageContainer 'storagecontainer.bicep' = {
+  dependsOn: [
+    storageAccount
+  ]
+  name: 'storageAccount-container'
+  params: {
+    storageAccountName: storageAccountName
+    storageContainerName: storageContainerName
+  }
 }
 
 module storagePrivateEndpoint 'privateendpoint.bicep' = {
@@ -147,3 +154,7 @@ module sqlSynapse 'sqlpool.bicep' = {
     tags: tags
   }
 }
+
+// output storageAccountId string = storageAccount.id
+// output storageAccountApiVersion string = storageAccount.apiVersion
+// output dataFactoryId string = dataFactory.id
