@@ -8,6 +8,7 @@ param environment string {
 }
 param tags object = {
   project: 'AzSecurePaaS'
+  component: 'app'
 }
 
 param sqlAdminLoginName string

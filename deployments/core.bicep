@@ -7,10 +7,12 @@ param environment string {
     'prod'
   ]
 }
-
 param region string = 'centralus'
 param appPrefix string
-param tags object
+param tags object = {
+  project: 'AzSecurePaaS'
+  component: 'core'
+}
 
 // HUB VNET IP SETTINGS
 param bastionSubnetAddressPrefix string = '10.10.0.128/25'  // 123 addresses - 10.10.0.128 - 10.10.0.255
@@ -24,10 +26,12 @@ param integrationSubnetAddressPrefix string = '10.20.2.0/25'    // 123 addresses
 
 // DESKTOP
 param vmAdminUserName string = 'vmadmin'
-param vmAdminPwd string
+param vmAdminPwd string {
+  secure: true
+}
 
 // Network Watcher
-param networkWatcherName string = 'NetworkWatcher_centralus'
+param networkWatcherName string = 'NetworkWatcher_${environment}_centralus'
 
 resource netrg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: '${appPrefix}-${environment}-network'

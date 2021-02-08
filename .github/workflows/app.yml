@@ -5,6 +5,7 @@ env:
   ACTION_GROUP_NAME: WBADemoAdmin
   APP_PREFIX: wbademo
   SQL_ADMIN_OBJECT_ID: da40d0a0-5874-4dfa-885d-f56d0c9b674b
+  SQL_ADMIN_LOGIN_NAME: paasdemo
 
 on:
   issue_comment:
@@ -68,15 +69,25 @@ jobs:
           $additionalParams = @{
             appPrefix         = "${{ env.APP_PREFIX }}"
             environment       = "${{ env.ENVIRONMENT }}"
-            vmAdminPwd        = "${{ secrets.VM_ADMIN_PASSWORD }}"
             sqlAdminObjectId  = "${{ env.SQL_ADMIN_OBJECT_ID }}"
-            sqlAdminLoginName = "groot"
-            vmAdminUserName   = "groot"
+            sqlAdminLoginName = "${{ env.SQL_ADMIN_LOGIN_NAME }}"
+            sqlAdminLoginPwd  = "${{ secrets.SQL_ADMIN_PASSWORD }}"
+          }
+
+          $rgName = "${{ env.APP_PREFIX}}-${{ env.ENVIRONMENT }}-app"
+          $rg = Get-AzResourceGroup -ErrorAction SilentlyContinue | Where-Object { $_.ResourceGroupName -like "$rgName*" }
+          if ($null -eq $rg) {
+            Write-Verbose "Resource group - $rgName does not exist, creating..." -Verbose
+
+            New-AzResourceGroup -Name $rgName -Location ${{ env.LOCATION }}
+          }
+          else {
+            Write-Verbose "Resource group already exists..." -Verbose
           }
 
           Write-Verbose "Deploying..."
-          New-AzDeployment -TemplateFile ./deployments/application.json `
-              -Location '${{ env.LOCATION }}' `
+          New-AzResourceGroupDeployment -TemplateFile ./deployments/application.json `
+              -ResourceGroupName '${{ env.RESOURCE_GROUP_NAME }}' `
               -TemplateParameterObject $additionalParams `
               -Verbose
 

@@ -100,3 +100,7 @@ The following is a list of parameters needed at runtime to run/provision the env
 |`SQL_ADMIN_OBJECT_ID`| | string | Name The object Id of the user - needed for SQL |
 |`SQL_ADMIN_LOGIN_NAME`| | string | SQL admin user name |
 |`SQL_ADMIN_PASSWORD`| `${{ env.SQL_ADMIN_PASSWORD }}` | secureString | Create a secret in your repo settings. Sql admin password |
+|`VM_ADMIN_PASSWORD`| `${{ secrets.VM_ADMIN_PASSWORD }}` | secureString | Create a secret in your repo settings. VM admin password |
+
+
+

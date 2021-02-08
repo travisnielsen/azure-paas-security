@@ -65,6 +65,7 @@ jobs:
           $additionalParams = @{
             appPrefix   = "${{ env.APP_PREFIX }}"
             environment = "${{ env.ENVIRONMENT }}"
+            vmAdminPwd  = "${{ secrets.VM_ADMIN_PASSWORD }}"
           }
 
           Write-Verbose "Deploying..."
