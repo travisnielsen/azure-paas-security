@@ -58,6 +58,15 @@ module hubVnet 'modules/vnet.bicep' = {
           */
         }
       }
+      {
+        name: 'desktop'
+        properties: {
+          addressPrefix: desktopSubnetAddressPrefix
+          networkSecurityGroup: {
+            id: desktopNsg.outputs.id
+          }
+        }
+      }
     ]
   }
 }
@@ -426,6 +435,7 @@ module hubAzFw 'modules/azfw.bicep' = {
     hubId: hubVnet.outputs.id
     desktopSubnetCidr: desktopSubnetAddressPrefix
     devopsSubnetCidr: devopsSubnetAddressPrefix
+    azPaasSubnetCidr: azServicesSubnetAddressPrefix
   }
 }
 
@@ -495,6 +505,21 @@ module spokeVnetAzureWebsitesZoneLink 'modules/dnszonelink.bicep' = {
   }
 }
 
+// Link the hub VNet to the privatelink.azurewebsites.net private zone
+module hubVnetAzureWebsitesZoneLink 'modules/dnszonelink.bicep' = {
+  name: 'dns-link-azurewebsites-hubvnet'
+  scope: resourceGroup(netrg.name)
+  dependsOn: [
+    privateZoneAzureWebsites
+  ]
+  params: {
+    vnetName: hubVnet.outputs.name
+    vnetId: hubVnet.outputs.id
+    zoneName: 'privatelink.azurewebsites.net'
+    autoRegistration: false
+  }
+}
+
 // Private DNS zone for Azure Blob Storage (ADLS)
 module privateZoneAzureBlobStorage 'modules/dnszoneprivate.bicep' = {
   name: 'dns-private-storage-blob'
@@ -518,6 +543,22 @@ module spokeVnetAzureBlobStorageZoneLink 'modules/dnszonelink.bicep' = {
     autoRegistration: false
   }
 }
+
+// Link the hub VNet to the privatelink.blob.core.windows.net private zone
+module hubVnetAzureBlobStorageZoneLink 'modules/dnszonelink.bicep' = {
+  name: 'dns-link-blobstorage-hubvnet'
+  scope: resourceGroup(netrg.name)
+  dependsOn: [
+    privateZoneAzureBlobStorage
+  ]
+  params: {
+    vnetName: hubVnet.outputs.name
+    vnetId: hubVnet.outputs.id
+    zoneName: 'privatelink.blob.core.windows.net'
+    autoRegistration: false
+  }
+}
+
 
 // Private DNS for Azure Data Factory
 module privateZoneAzureDataFactory 'modules/dnszoneprivate.bicep' = {
@@ -543,26 +584,17 @@ module spokeVnetAzureDataFactoryZoneLink 'modules/dnszonelink.bicep' = {
   }
 }
 
-// Private DNS for Synapse SQL
-module privateZoneSynapseSql 'modules/dnszoneprivate.bicep' = {
-  name: 'dns-private-synapse-sql'
-  scope: resourceGroup(netrg.name)
-  params: {
-    zoneName: 'privatelink.sql.azuresynapse.net'
-  }
-}
-
-// Link the spoke VNet to the privatelink.sql.azuresynapse.net private zone
-module spokeVnetSynapseSqlZoneLink 'modules/dnszonelink.bicep' = {
-  name: 'dns-link-synapsesql-spokevnet'
+// Link the hub VNet to the privatelink.datafactory.azure.net private zone
+module hubVnetAzureDataFactoryZoneLink 'modules/dnszonelink.bicep' = {
+  name: 'dns-link-datafactory-hubvnet'
   scope: resourceGroup(netrg.name)
   dependsOn: [
-    privateZoneSynapseSql
+    privateZoneAzureDataFactory
   ]
   params: {
-    vnetName: spokeVnet.outputs.name
-    vnetId: spokeVnet.outputs.id
-    zoneName: 'privatelink.sql.azuresynapse.net'
+    vnetName: hubVnet.outputs.name
+    vnetId: hubVnet.outputs.id
+    zoneName: 'privatelink.datafactory.azure.net'
     autoRegistration: false
   }
 }
@@ -586,6 +618,21 @@ module spokeVnetSqlZoneLink 'modules/dnszonelink.bicep' = {
   params: {
     vnetName: spokeVnet.outputs.name
     vnetId: spokeVnet.outputs.id
+    zoneName: 'privatelink.database.windows.net'
+    autoRegistration: false
+  }
+}
+
+// Link the hub VNet to the privatelink.database.windows.net private zone
+module hubVnetSqlZoneLink 'modules/dnszonelink.bicep' = {
+  name: 'dns-link-sql-hubvnet'
+  scope: resourceGroup(netrg.name)
+  dependsOn: [
+    privateZoneSql
+  ]
+  params: {
+    vnetName: hubVnet.outputs.name
+    vnetId: hubVnet.outputs.id
     zoneName: 'privatelink.database.windows.net'
     autoRegistration: false
   }
@@ -625,6 +672,20 @@ module spokeVnetAzureZoneLink 'modules/dnszonelink.bicep' = {
   params: {
     vnetName: spokeVnet.outputs.name
     vnetId: spokeVnet.outputs.id
+    zoneName: 'privatelink.azure.com'
+    autoRegistration: false
+  }
+}
+
+module hubVnetAzureZoneLink 'modules/dnszonelink.bicep' = {
+  name: 'dns-link-azure-hub'
+  scope: resourceGroup(netrg.name)
+  dependsOn: [
+    privateZoneAzure
+  ]
+  params: {
+    vnetName: hubVnet.outputs.name
+    vnetId: hubVnet.outputs.id
     zoneName: 'privatelink.azure.com'
     autoRegistration: false
   }

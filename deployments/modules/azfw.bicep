@@ -2,6 +2,7 @@ param prefix string
 param hubId string
 param desktopSubnetCidr string
 param devopsSubnetCidr string
+param azPaasSubnetCidr string
 
 resource publicIp 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
   name: '${prefix}-azfw-ip'
@@ -55,6 +56,23 @@ resource fwl 'Microsoft.Network/azureFirewalls@2020-06-01' = {
               ]
               destinationPorts: [
                 '80'
+                '443'
+              ]
+            }
+            {
+              description: 'Allow SQL and SSL from desktop to app subnet'
+              name: 'desktop-app-admin'
+              protocols: [
+                'TCP'
+              ]
+              sourceAddresses: [
+                desktopSubnetCidr
+              ]
+              destinationAddresses: [
+                azPaasSubnetCidr
+              ]
+              destinationPorts: [
+                '1433'
                 '443'
               ]
             }
