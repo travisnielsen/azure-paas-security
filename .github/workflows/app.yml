@@ -1,8 +1,11 @@
-name: Network-DEPLOY
+name: App-Infra-DEPLOY
 
 env:
   LOCATION: centralus
+  ACTION_GROUP_NAME: WBADemoAdmin
   APP_PREFIX: wbademo
+  SQL_ADMIN_OBJECT_ID: da40d0a0-5874-4dfa-885d-f56d0c9b674b
+  SQL_ADMIN_LOGIN_NAME: paasdemo
 
 on:
   issue_comment:
@@ -11,7 +14,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: contains(github.event.comment.body, '/network:')
+    if: contains(github.event.comment.body, '/app:')
 
     steps:
     # checkout - remember we have to check out the PR code!
@@ -23,18 +26,9 @@ jobs:
 
     - name: "Set env variables from chat message"
       run: |
-        pattern="^\/network\:(\w+)$"
+        pattern="^\/app\:(\w+)$"
         [[ "${{ github.event.comment.body }}" =~ $pattern ]]
         echo "ENVIRONMENT=${BASH_REMATCH[1]}" >> $GITHUB_ENV
-
-    - name: Create starting comment
-      uses: peter-evans/create-or-update-comment@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        issue-number: ${{ github.event.issue.number }}
-        body: |
-          Hey, @${{ github.event.comment.user.login }}!
-          :rocket: Deploying network to ${{ env.ENVIRONMENT }} is beginning! :rocket:
 
     # Install the latest release of the bicep CLI
     - name: Install bicep CLI
@@ -47,7 +41,17 @@ jobs:
     # Transpile bicep file into ARM template
     - name: Build ARM Template from bicep file
       run: |
-        bicep build ./deployments/network.bicep
+        bicep build ./deployments/application.bicep
+        dir
+
+    - name: Create starting comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.issue.number }}
+        body: |
+          Hey, @${{ github.event.comment.user.login }}!
+          :rocket: Deploying app infra to ${{ env.ENVIRONMENT }} is beginning! :rocket:
 
     - name: 'Login via Az module'
       uses: azure/login@v1
@@ -63,13 +67,27 @@ jobs:
         inlineScript: |
           # deploy infra resources
           $additionalParams = @{
-            appPrefix   = "${{ env.APP_PREFIX }}"
-            environment = "${{ env.ENVIRONMENT }}"
+            appPrefix         = "${{ env.APP_PREFIX }}"
+            environment       = "${{ env.ENVIRONMENT }}"
+            sqlAdminObjectId  = "${{ env.SQL_ADMIN_OBJECT_ID }}"
+            sqlAdminLoginName = "${{ env.SQL_ADMIN_LOGIN_NAME }}"
+            sqlAdminLoginPwd  = "${{ secrets.SQL_ADMIN_PASSWORD }}"
+          }
+
+          $rgName = "${{ env.APP_PREFIX}}-${{ env.ENVIRONMENT }}-app"
+          $rg = Get-AzResourceGroup -ErrorAction SilentlyContinue | Where-Object { $_.ResourceGroupName -like "$rgName*" }
+          if ($null -eq $rg) {
+            Write-Verbose "Resource group - $rgName does not exist, creating..." -Verbose
+
+            New-AzResourceGroup -Name $rgName -Location ${{ env.LOCATION }}
+          }
+          else {
+            Write-Verbose "Resource group already exists..." -Verbose
           }
 
           Write-Verbose "Deploying..."
-          New-AzDeployment -TemplateFile ./deployments/network.json `
-              -Location '${{ env.LOCATION }}' `
+          New-AzResourceGroupDeployment -TemplateFile ./deployments/application.json `
+              -ResourceGroupName '${{ env.RESOURCE_GROUP_NAME }}' `
               -TemplateParameterObject $additionalParams `
               -Verbose
 
@@ -80,4 +98,4 @@ jobs:
         issue-number: ${{ github.event.issue.number }}
         body: |
           Hey, @${{ github.event.comment.user.login }}!
-          :tada: Network deployment to ${{ env.ENVIRONMENT }} completed! :tada:
+          :tada: App infra deployment to ${{ env.ENVIRONMENT }} completed! :tada:

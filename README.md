@@ -12,7 +12,7 @@ This reference environment includes two main areas that are deployed in the targ
 * [Azure Infrastructure](deployments/readme.md) - Represents the solution design
 * [Azure Monitoring](monitoring/readme.md) - Contains information about what's being monitored
 
-Navigate to each link before for instructiosn on how these assets are be deployed.
+Navigate to each link before for instructions on how these assets are be deployed.
 
 ### CI-CD Workflow
 
@@ -51,15 +51,15 @@ The messages that are issues must be on a single line and have the following syn
 
 | Component | Pipeline Name | Note | How to Deploy |
 |---|---|---|---|
-|`network`| `network.yml` | Deploys all networking component | During a PR request simply type `/network:{environment}` to test and validate |
-|`monitoring`| `monitoring.yml` | Deploys all monitoring component (diagnostics, alerts & dashboard) | During a PR request simply type `/monitoring:` to test and validate monitoring |
-|`infra`| `infra.yml` | Deploys all infrastructure | During a PR request simply type `/infra:{environment}` to test and validate |
+|`core`| `core.yml` | Deploys all core infra component | During a PR request simply type `/core:{environment}` to test and validate |
+|`monitoring`| `monitoring.yml` | Deploys all monitoring component (diagnostics, alerts & dashboard) | During a PR request simply type `/monitoring:{environment}` to test and validate monitoring |
+|`app`| `app.yml` | Deploys all app infrastructure | During a PR request simply type `/app:{environment}` to test and validate |
 |`full`| `ci-cd.yml` | Triggers full deployment pipeline | During a PR request simply type `/full:{environment}` to deploy whole environment |
 |`teardown`| `teardown.yml` | Tear down entire environment | During a PR request simply type `/teardown:{environment}` to delete all resource groups |
 
 ### Example
 
-To deploy networking components in the dev environment, simply write `/network:dev` in your pull request comment. This will automatically trigger the network component pipeline and deploy all networking infrasturcture into the Dev environment (resource group).
+To deploy core infra components in the dev environment, simply write `/core:dev` in your pull request comment. This will automatically trigger the `core-infra-deploy` pipeline and deploy all necessary infrasturcture into the Dev environment (resource group).
 
 ![sample_pr](images/sample_pr.png)
 
@@ -97,4 +97,10 @@ The following is a list of parameters needed at runtime to run/provision the env
 |---|---|---|---|
 |`LOCATION`| `centralus` | string | Deployment region |
 |`APP_PREFIX`| `wbademo` | string | App prefix name |
-|`SQL_ADMIN_OBJECT_ID`|  | string | Name The object Id of the user - needed for SQL |
+|`SQL_ADMIN_OBJECT_ID`| | string | Name The object Id of the user - needed for SQL |
+|`SQL_ADMIN_LOGIN_NAME`| | string | SQL admin user name |
+|`SQL_ADMIN_PASSWORD`| `${{ env.SQL_ADMIN_PASSWORD }}` | secureString | Create a secret in your repo settings. Sql admin password |
+|`VM_ADMIN_PASSWORD`| `${{ secrets.VM_ADMIN_PASSWORD }}` | secureString | Create a secret in your repo settings. VM admin password |
+
+
+

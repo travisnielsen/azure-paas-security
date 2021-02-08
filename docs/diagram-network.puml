@@ -9,6 +9,7 @@
 !includeurl AzurePuml/Compute/AppServiceEnvironments.puml
 !includeurl AzurePuml/Compute/FunctionApps.puml
 !includeurl AzurePuml/Compute/VirtualMachine.puml
+!includeurl AzurePuml/Databases/SQLDataWarehouses.puml
 !includeurl AzurePuml/Identity/AzureActiveDirectory.puml
 !includeurl AzurePuml/Identity/Users.puml
 !includeurl AzurePuml/ManagementGovernance/NetworkWatcher.puml
@@ -27,30 +28,63 @@
 
 LAYOUT_LEFT_RIGHT
 
-TITLE: Network Diagram
+' Color theme: http://simianuprising.com/wp-content/uploads/2012/08/solarized-reference-horizontal.png
+
+' TITLE: Overview
+
+skinparam BackgroundColor #002b36
+skinparam TitleFontColor #eee8d5
+skinparam TitleFontSize 35
 
 skinparam Rectangle {
-    BorderColor<<virtualNetwork>> #7C0A02
-    RectangleBorderThickness<<virtualNetwork>> 0.5
-    BackgroundColor<<subnet>> HoneyDew
-    BorderColor<<subnet>> Green
-    BorderColor<<networkAcls>> #7C0A02
+    BackgroundColor<<subnet>> #93a1a1
+    ' BorderColor<<networkAcls>> #7C0A02
+    'StereotypeFontColor #eee8d5
+}
+
+skinparam rectangle<<container>> {
+    BackgroundColor<<VirtualNetworks>> #073642
+    FontColor<<VirtualNetworks>> #eee8d5
+
+    BackgroundColor<<Users>> #eee8d5
+    BackgroundColor<<AzureActiveDirectory>> #eee8d5
+    BackgroundColor<<ManagementPortal>> #eee8d5
+    BackgroundColor<<AzureFirewall>> #eee8d5
+
+    BackgroundColor<<Bastion>> #eee8d5
+    BackgroundColor<<VirtualMachine>> #eee8d5
+    BackgroundColor<<PrivateLink>> #eee8d5
+    BackgroundColor<<DataFactory>> #eee8d5
+    BackgroundColor<<StorageAccounts>> #eee8d5
+    BackgroundColor<<SQLDataWarehouses>> #eee8d5
+    BackgroundColor<<FunctionApps>> #eee8d5
+
+    BackgroundColor<<NetworkWatcher>> #eee8d5
+    BackgroundColor<<NetworkSecurityGroups>> #eee8d5
+    BackgroundColor<<udr>> #002b36
+}
+
+skinparam package<<container>> {
+    StereotypeFontColor<<VirtualNetworks>> #eee8d5
 }
 
 
 VirtualNetworks(vnetHub, "vnet-hub", "10.10.0.0/20") {
     Rectangle "azfw" <<subnet>> as subFirewall #line.dotted {
-        AzureFirewall(azfw, "Hub Firewall", "", "")
+        AzureFirewall(azfw, "Hub Firewall", "", "Deny egress (default)")
+    }
+
+    Rectangle "bastion" <<subnet>> as subBastion #line.dotted {
+        Bastion(bastion, "Bastion", "", "SSH / RDP Proxy")
     }
 }
 
 VirtualNetworks(vnetSpoke, "vnet-spoke", "10.20.0.0/20") {
-    Rectangle "bastion" <<subnet>> as subBastion #line.dotted {
-        Bastion(bastion, "Bastion", "SSH / RDP Proxy", "")
-    }
+
 
     Rectangle "util" <<subnet>> as subUtil #line.dotted {
         VirtualMachine(vm, "Utility Servers", "", "Allow SSH / RDP from Bastion subnet")
+        Container(udr1, "User Defined Route", "Force egress to hub", "0.0.0.0 to AZFW")
     }
 
     Rectangle "az-svcs" <<subnet>> as subPrivateLinks #line.dotted {
@@ -58,36 +92,40 @@ VirtualNetworks(vnetSpoke, "vnet-spoke", "10.20.0.0/20") {
     }
 
     Rectangle "func-integration" <<subnet>> as subFuncInt #line.dotted {
-        Container(udr, "User Defined Route", "Force egress to hub", "0.0.0.0 to AZFW")
+        Container(udr2, "User Defined Route", "Force egress to hub", "0.0.0.0 to AZFW")
     }
 }
 
 Users(users, "Admins", "", "")
 AzureActiveDirectory(aad, "Corprate tenant", "", "MFA\nConditional Access")
 ManagementPortal(portal, "Azure Portal", "", "Connect to utility servers")
-users --> aad: "authentication"
-users --> portal
-portal --> bastion: "https"
+users -[#b48900]-> aad: "<color:#b48900>Authentication"
+users -[#d33682]-> portal
+portal -[#d33682]-> bastion: "<color:#d33682>https"
+bastion -[#d33682]-> vm: "<color:#d33682>RDP/SSH"
 
-vnetHub --- vnetSpoke: "VNet Peering"
+vnetHub -[#268bd2]-- vnetSpoke: "<color:#268bd2><size:18>VNET\n<color:#268bd2><size:18>Peering"
 
 NetworkWatcher(netWatcher, "Traffic Analytics", "", "")
 NetworkSecurityGroups(nsgs, "Traffic Segmentation", "1 per subnet", "Deny outbound Internet\nExplicit inbound allow")
 
-netWatcher <-- nsgs: "Flow logs"
-nsgs --> subBastion: nsg-bastion
-nsgs --> subUtil: nsg-util
-nsgs --> subPrivateLinks: nsg-services
-nsgs --> subFuncInt: nsg-integration
+netWatcher <-[#268bd2]- nsgs: "<color:#268bd2>Flow logs"
+nsgs -[#268bd2]-> subBastion: "<color:#268bd2>nsg-bastion"
+nsgs -[#268bd2]-> subUtil: "<color:#268bd2>nsg-util"
+nsgs -[#268bd2]-> subPrivateLinks: "<color:#268bd2>nsg-services"
+nsgs -[#268bd2]-> subFuncInt: "<color:#268bd2>nsg-integration"
 
-StorageAccounts(adls, "Data Lake", "Standard SKU", "Customer Data")
-azsvcLink --> adls: "data access"
+StorageAccounts(adls, "Data Lake", "Standard SKU", "Source data")
+azsvcLink -[#859900]-> adls: "<color:#859900>Private Link"
+
+SQLDataWarehouses(sqldw, "SQL Synapse", "", "Enriched data")
+azsvcLink -[#859900]-> sqldw: "<color:#859900>Private Link"
 
 FunctionApps(functions, "Functions", "Premium Plan", "Private storage account for service (preview)")
-azsvcLink --> functions: "http trigger (inbound)"
-subFuncInt <-- functions: "vnet Integration (outbound)"
+azsvcLink -[#859900]-> functions: "<color:#859900>Private Link"
+subFuncInt <-[#2aa198]- functions: "<color:#2aa198>VNET Integration (outbound)"
 
-DataFactory(datafactory, "Data Processing", "", "ETL jobs")
-azsvcLink <-- datafactory: "data access"
+DataFactory(datafactory, "Data Processing", "Managed Virtual Network", "ETL jobs")
+azsvcLink <-[#2aa198]- datafactory: "<color:#2aa198>data access"
 
 @end
