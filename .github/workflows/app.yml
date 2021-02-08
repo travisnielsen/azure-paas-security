@@ -53,7 +53,7 @@ jobs:
         body: |
           Hey, @${{ github.event.comment.user.login }}!
           :rocket: Deploying app infra to ${{ env.ENVIRONMENT }} is beginning! :rocket:
-          
+
           Workflow URL - ${{ env.WORKFLOW_URL }}
 
     - name: 'Login via Az module'

@@ -26,6 +26,7 @@ jobs:
         pattern="^\/teardown\:(\w+)$"
         [[ "${{ github.event.comment.body }}" =~ $pattern ]]
         echo "ENVIRONMENT=${BASH_REMATCH[1]}" >> $GITHUB_ENV
+        echo "WORKFLOW_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> $GITHUB_ENV
 
     - name: Create starting comment
       uses: peter-evans/create-or-update-comment@v1
@@ -35,6 +36,8 @@ jobs:
         body: |
           Hey, @${{ github.event.comment.user.login }}!
           :rocket: Tearding down ${{ env.ENVIRONMENT }} is beginning! :rocket:
+
+          Workflow URL - ${{ env.WORKFLOW_URL }}
 
     - name: 'Login via Az module'
       uses: azure/login@v1
@@ -63,3 +66,5 @@ jobs:
         body: |
           Hey, @${{ github.event.comment.user.login }}!
           :tada: Teardown of ${{ env.ENVIRONMENT }} completed! :tada:
+
+          Workflow URL - ${{ env.WORKFLOW_URL }}
