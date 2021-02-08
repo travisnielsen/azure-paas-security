@@ -1,20 +1,11 @@
 param appPrefix string
-param environment string {
-  allowed: [
-    'dev'
-    'uat'
-    'prod'
-  ]
-}
 param tags object = {
   project: 'AzSecurePaaS'
   component: 'app'
 }
 
 param sqlAdminLoginName string
-param sqlAdminLoginPwd string {
-  secure: true
-}
+param sqlAdminLoginPwd string
 param sqlAdminObjectId string
 
 param storageContainerName string = 'testdata'
@@ -24,20 +15,27 @@ param sqlDatabaseSKU string = 'DW100c'
 // VNet integration
 var subscriptionId = subscription().subscriptionId
 var region = resourceGroup().location
-var networkResourceGroupName = '${appPrefix}-${environment}-network'
-var vnetName = '${appPrefix}-${region}-${environment}-app'
+var networkResourceGroupName = '${appPrefix}-network'
+var vnetName = '${appPrefix}-app'
 
-var sqlServerName = '${uniqueString(resourceGroup().id)}-${environment}-sql'
-var dataFactoryName = '${uniqueString(resourceGroup().id)}-${environment}-df'
-var storageAccountName = '${uniqueString(resourceGroup().id)}'
+var sqlServerName = '${uniqueString(resourceGroup().id)}-sql'
+var dataFactoryName = '${uniqueString(resourceGroup().id)}-df'
 
-var logAnalyticsName = '${uniqueString(resourceGroup().id)}-${environment}'
+
+// Deploy Action Group for monitoring/alerting
+module actionGroup 'modules/actionGroup.bicep' = {
+  name: 'actionGroup'
+  params: {
+    actionGroupName: 'wbademo-appadmin'
+    actionGroupShortName: 'wbademoadmin'
+  }
+}
 
 /*
  *  Storage account
  */
 resource storageAccount 'Microsoft.Storage/storageAccounts@2019-06-01' = {
-  name: storageAccountName
+  name: uniqueString(resourceGroup().id)
   location: resourceGroup().location
   sku: {
     name: 'Standard_LRS'
@@ -64,7 +62,7 @@ resource container 'Microsoft.Storage/storageAccounts/blobServices/containers@20
 module logAnalytics 'modules/loganalytics.bicep' = {
   name: 'logAnalytics'
   params: {
-    name: logAnalyticsName
+    name: uniqueString(resourceGroup().id)
     appTags: tags
   }
 }
@@ -76,7 +74,7 @@ module storagePrivateEndpoint 'modules/privateendpoint.bicep' = {
     storageAccount
   ]
   params: {
-    privateEndpointName: '${storageAccount.name}-${environment}-storageEndpoint'
+    privateEndpointName: '${storageAccount.name}-storageEndpoint'
     serviceResourceId: storageAccount.id
     resourceGroupNameNetwork: networkResourceGroupName
     vnetName: vnetName
@@ -103,6 +101,7 @@ module sqlSynapse 'modules/sqlpool.bicep' = {
     vnetNamePrivateEndpoint: vnetName
     subnetNamePrivateEndpoint: 'azureServices'
     //logAnalyticsWorkspaceId: logAnalytics.outputs.id
+    actionGroupId: actionGroup.outputs.id
     tags: tags
   }
 }
@@ -150,7 +149,7 @@ module dataFactoryPrivateEndpoint 'modules/privateendpoint.bicep' = {
 
 resource dataFactoryManagedVNET 'Microsoft.DataFactory/factories/managedVirtualNetworks@2018-06-01' = {
   name: '${dataFactory.name}/default'
-  properties: {
+  properties: { 
   }
 }
 
