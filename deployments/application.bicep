@@ -1,5 +1,9 @@
 param appPrefix string
-param tags object
+param tags object = {
+  project: 'AzSecurePaaS'
+  component: 'app'
+}
+
 param sqlAdminLoginName string
 param sqlAdminLoginPwd string
 param sqlAdminObjectId string
@@ -16,6 +20,16 @@ var vnetName = '${appPrefix}-app'
 
 var sqlServerName = '${uniqueString(resourceGroup().id)}-sql'
 var dataFactoryName = '${uniqueString(resourceGroup().id)}-df'
+
+
+// Deploy Action Group for monitoring/alerting
+module actionGroup 'modules/actionGroup.bicep' = {
+  name: 'actionGroup'
+  params: {
+    actionGroupName: 'wbademo-appadmin'
+    actionGroupShortName: 'wbademoadmin'
+  }
+}
 
 /*
  *  Storage account
@@ -86,7 +100,8 @@ module sqlSynapse 'modules/sqlpool.bicep' = {
     resourceGroupNameNetwork: networkResourceGroupName
     vnetNamePrivateEndpoint: vnetName
     subnetNamePrivateEndpoint: 'azureServices'
-    logAnalyticsWorkspaceId: logAnalytics.outputs.id
+    //logAnalyticsWorkspaceId: logAnalytics.outputs.id
+    actionGroupId: actionGroup.outputs.id
     tags: tags
   }
 }
@@ -234,7 +249,7 @@ resource roleAssignmentName 'Microsoft.Authorization/roleAssignments@2020-04-01-
   ]
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
-    principalId: dataFactory.identity.principalId
+    principalId: reference(dataFactory.id, '2018-06-01', 'full').identity.principalId
   }
   scope: storageAccount
 }

@@ -1,8 +1,10 @@
 targetScope = 'subscription'
-
 param region string = 'centralus'
 param appPrefix string
-param tags object
+param tags object = {
+  project: 'AzSecurePaaS'
+  component: 'core'
+}
 
 // HUB VNET IP SETTINGS
 param bastionSubnetAddressPrefix string = '10.10.0.128/25'  // 123 addresses - 10.10.0.128 - 10.10.0.255
@@ -16,7 +18,9 @@ param integrationSubnetAddressPrefix string = '10.20.2.0/25'    // 123 addresses
 
 // DESKTOP
 param vmAdminUserName string = 'vmadmin'
-param vmAdminPwd string
+param vmAdminPwd string {
+  secure: true
+}
 
 // Network Watcher
 param networkWatcherName string = 'NetworkWatcher_centralus'
@@ -24,11 +28,23 @@ param networkWatcherName string = 'NetworkWatcher_centralus'
 resource netrg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: '${appPrefix}-network'
   location: region
+  tags: tags
 }
 
 resource desktoprg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: '${appPrefix}-desktop'
   location: region
+  tags: tags
+}
+
+// Deploy Action Group for monitoring/alerting
+module actionGroup 'modules/actionGroup.bicep' = {
+  name: 'actionGroup'
+  scope: resourceGroup(netrg.name)
+  params: {
+    actionGroupName: 'wbademo-networkadmin'
+    actionGroupShortName: 'wbademoadmin'
+  }
 }
 
 module hubVnet 'modules/vnet.bicep' = {
@@ -90,7 +106,7 @@ module spokeVnet 'modules/vnet.bicep' = {
           networkSecurityGroup: {
             id: devopsNsg.outputs.id
           }
-        }     
+        }
       }
       {
         name: 'azureservices'
@@ -436,6 +452,7 @@ module hubAzFw 'modules/azfw.bicep' = {
     desktopSubnetCidr: desktopSubnetAddressPrefix
     devopsSubnetCidr: devopsSubnetAddressPrefix
     azPaasSubnetCidr: azServicesSubnetAddressPrefix
+    actionGroupId: actionGroup.outputs.id
   }
 }
 

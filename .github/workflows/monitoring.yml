@@ -1,0 +1,95 @@
+name: monitoring-DEPLOY
+
+env:
+  APP_PREFIX: WBADemo
+  LOCATION: centralus
+  ACTION_GROUP: WBADemoAdmin
+
+on:
+  issue_comment:
+    types: [ created, edited ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: contains(github.event.comment.body, '/monitoring:')
+
+    steps:
+    # checkout - remember we have to check out the PR code!
+    - uses: actions/checkout@v2
+    - name: Checkout PR code
+      uses: dawidd6/action-checkout-pr@v1
+      with:
+        pr: ${{ github.event.issue.number }}
+
+    - name: "Set env variables from chat message"
+      run: |
+        pattern="^\/monitoring\:(\w+)$"
+        [[ "${{ github.event.comment.body }}" =~ $pattern ]]
+        echo "ENVIRONMENT=${BASH_REMATCH[1]}" >> $GITHUB_ENV
+        echo "WORKFLOW_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> $GITHUB_ENV
+
+    - name: Create starting comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.issue.number }}
+        body: |
+          Hey, @${{ github.event.comment.user.login }}!
+          :rocket: Deploying monitoring to ${{ env.ENVIRONMENT }} is beginning! :rocket:
+
+          Workflow URL - ${{ env.WORKFLOW_URL }}
+
+    - name: 'Login via Az module'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        enable-AzPSSession: true
+
+    # - name: 'Replace tookens'
+    #   uses: cschleiden/replace-tokens@v1
+    #   with:
+    #     tokenPrefix: '#{'
+    #     tokenSuffix: '}#'
+    #     files: '["**/*.parameters.json"]'
+
+    - name: Enable Diagnostics logging
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: 'latest'
+        inlineScript: |
+          # load module
+          . monitoring/Deploy-AzDiagnostics.ps1
+
+          # Invoke
+          $functionInput = @{
+            WorkspaceResourceGroup = '${{ env.APP_PREFIX }}-app'
+          }
+
+          Deploy-AzDiagnostics @functionInput -Verbose
+
+    - name: Deploy Dashboards
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: 'latest'
+        inlineScript: |
+          # load module
+          . monitoring/Deploy-AzDashboards.ps1
+
+          # Invoke
+          $functionInput = @{
+            ResourceGroupName = '${{ env.APP_PREFIX }}-app'
+          }
+
+          Deploy-AzDashboards @functionInput -Verbose
+
+    - name: Create completed comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.issue.number }}
+        body: |
+          Hey, @${{ github.event.comment.user.login }}!
+          :tada: Monitoring deployment to ${{ env.ENVIRONMENT }} completed! :tada:
+
+          Workflow URL - ${{ env.WORKFLOW_URL }}

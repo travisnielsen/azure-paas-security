@@ -1,0 +1,81 @@
+name: Env-TEARDOWN
+
+env:
+  LOCATION: centralus
+  APP_PREFIX: Wbademo
+
+on:
+  issue_comment:
+    types: [ created, edited ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: contains(github.event.comment.body, '/teardown:')
+
+    steps:
+    # checkout - remember we have to check out the PR code!
+    - uses: actions/checkout@v2
+    - name: Checkout PR code
+      uses: dawidd6/action-checkout-pr@v1
+      with:
+        pr: ${{ github.event.issue.number }}
+
+    - name: "Set env variables from chat message"
+      run: |
+        pattern="^\/teardown\:(\w+)$"
+        [[ "${{ github.event.comment.body }}" =~ $pattern ]]
+        echo "ENVIRONMENT=${BASH_REMATCH[1]}" >> $GITHUB_ENV
+        echo "WORKFLOW_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> $GITHUB_ENV
+
+    - name: Create starting comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.issue.number }}
+        body: |
+          Hey, @${{ github.event.comment.user.login }}!
+          :rocket: Tearding down ${{ env.ENVIRONMENT }} is beginning! :rocket:
+
+          Workflow URL - ${{ env.WORKFLOW_URL }}
+
+    - name: 'Login via Az module'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        enable-AzPSSession: true
+
+    - name: Teardown environment
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: latest
+        inlineScript: |
+          Write-Verbose "Tearing down..." -Verbose
+          $emptyARMTemplate = @{
+             '$schema' = 'https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#'
+             contentVersion = '1.0.0.0'
+             resources = @()
+          }
+
+          $rgs = Get-AzResourceGroup | Where-Object { $_.ResourceGroupName -like "${{ env.APP_PREFIX }}*" }
+
+          foreach ($rg in $rgs) {
+            $rgName = $rg.ResourceGroupName
+
+            Write-Verbose "Deleting resource group - $rgName" -Verbose
+            New-AzResourceGroupDeployment -Name PurgeResourceGroup `
+                -ResourceGroupName $rgName `
+                -TemplateObject $emptyARMTemplate `
+                -Mode Complete -AsJob -Force
+          }
+
+    - name: Create completed comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.issue.number }}
+        body: |
+          Hey, @${{ github.event.comment.user.login }}!
+          :tada: Teardown of ${{ env.ENVIRONMENT }} completed! :tada:
+
+          Workflow URL - ${{ env.WORKFLOW_URL }}
