@@ -60,7 +60,7 @@ jobs:
           $rgs = Get-AzResourceGroup | Where-Object { $_.ResourceGroupName -like "${{ env.APP_PREFIX }}*" } | Select-Object ResourceGroupName
 
           foreach ($rg in $rgs) {
-            Write-Verbose "Deleting resource group(s)" -Verbose
+            Write-Verbose "Deleting resource group - $rg" -Verbose
             
             New-AzResourceGroupDeployment -Name PurgeResourceGroup `
                 -ResourceGroupName $rg `
