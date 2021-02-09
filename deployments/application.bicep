@@ -222,6 +222,159 @@ resource adfLinkedServiceBlob 'Microsoft.DataFactory/factories/linkedservices@20
   }
 }
 
+resource adfDatasetSynapse 'Microsoft.DataFactory/factories/datasets@2018-06-01' = {
+  name: '${dataFactory.name}/AzureSynapseAnalyticsTable1'
+  dependsOn: [
+    dataFactory
+    adfLinkedServiceSql
+  ]
+  properties: {
+    linkedServiceName: {
+      referenceName: 'SqlSynapse1'
+      type: 'LinkedServiceReference'
+    }
+    type: 'AzureSqlDWTable'
+    schema: []
+    typeProperties: {
+      table: {
+        value: '@concat(\'tbl\', string(rand(1000000,9999999)))'
+        type: 'Expression'
+    }
+  }
+  }
+}
+
+resource adfDatasetBlob 'Microsoft.DataFactory/factories/datasets@2018-06-01' = {
+  name: '${dataFactory.name}/DelimitedText1'
+  dependsOn: [
+    dataFactory
+    adfLinkedServiceBlob
+  ]
+  properties: {
+    linkedServiceName: {
+      referenceName: 'BlobStorage1'
+      type: 'LinkedServiceReference'
+    }
+    type: 'DelimitedText'
+    typeProperties: {
+      location: {
+        type: 'AzureBlobStorageLocation'
+        container: 'testdata'
+    }
+    // columnDelimiter: ','
+    // escapeChar: '\\'
+    // quoteChar: '\\"'
+  }
+  }
+}
+
+resource adfDataFlow 'Microsoft.DataFactory/factories/dataflows@2018-06-01' = {
+  name: '${dataFactory.name}/dataflow1'
+  dependsOn: [
+    dataFactory
+    adfDatasetBlob
+    adfDatasetSynapse
+  ]
+  properties: {
+    type: 'MappingDataFlow'
+    typeProperties: {
+      sources: [
+          {
+            dataset: {
+              referenceName: 'DelimitedText1'
+              type: 'DatasetReference'
+            }
+            name: 'source1'
+          }
+        ]
+        sinks: [
+          {
+            dataset: {
+              referenceName: 'AzureSynapseAnalyticsTable1'
+              type: 'DatasetReference'
+            }
+            name: 'sink1'
+          }
+        ]
+        // transformations: [
+        // ]
+        script: 'source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tpurgeFiles: true,\n\twildcardPaths:[\'*.csv\']) ~> source1\nsource1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\trecreate:true,\n\tformat: \'table\',\n\tstaged: false,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tsaveOrder: 1) ~> sink1'
+    }
+  }
+}
+
+resource adfPipeline 'Microsoft.DataFactory/factories/pipelines@2018-06-01' = {
+  name: '${dataFactory.name}/pipeline1'
+  dependsOn: [
+    dataFactory
+    adfDataFlow
+    integrationRuntime
+  ]
+  properties: {
+    activities: [
+      {
+        name: 'Data flow1'
+        type: 'ExecuteDataFlow'
+        dependsOn: []
+        policy: {
+          timeout: '7.00:00:00'
+          retry: 0
+          retryIntervalInSeconds: 30
+          secureOutput: false
+          secureInput: false
+        }
+        userProperties: []
+        typeProperties: {
+          dataFlow: {
+            referenceName: 'dataflow1'
+            type: 'DataFlowReference'
+            parameters: {}
+            datasetParameters: {
+              source1: {}
+              sink1: {}
+            }
+            staging: {}
+            compute:{
+              coreCount: 8
+              computeType: 'General'
+            }
+            traceLevel: 'Fine'
+          }
+        }
+      }
+    ]
+  }
+}
+
+resource adfTrigger 'Microsoft.DataFactory/factories/triggers@2018-06-01' = {
+  name: '${dataFactory.name}/trigger1'
+  dependsOn: [
+    dataFactory
+    adfPipeline
+  ]
+  properties: {
+    runtimeState: 'Started'
+    pipelines: [
+      {
+        pipelineReference: {
+          referenceName: 'pipeline1'
+          type: 'PipelineReference'
+        }
+        parameters: {}
+      }
+    ]
+    type: 'BlobEventsTrigger'
+    typeProperties: {
+      blobPathBeginsWith: '/testdata/blobs/'
+      ignoreEmptyBlobs: true
+      scope: '/subscriptions/7a8fb3e5-9699-4869-93b4-c011fb7fc532/resourceGroups/contoso-data/providers/Microsoft.Storage/storageAccounts/bi2sz4tdlw5e4'
+      events: [
+        'Microsoft.Storage.BlobCreated'
+      ]
+    }
+  }
+}
+
 // Storage: Grant data read access to ADF managed identity
 
 // var roleAssignmentName_var = guid(resourceId('Microsoft.Storage/storageAccounts/', storageAccount.name), 'ba92f5b4-2d11-453d-a403-e96b0029c9fe', dataFactory.name)
@@ -234,7 +387,7 @@ resource roleAssignmentName 'Microsoft.Authorization/roleAssignments@2020-04-01-
   ]
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
-    principalId: dataFactory.identity.principalId
+    principalId: reference(dataFactory.id, '2018-06-01', 'full').identity.principalId
   }
   scope: storageAccount
 }
