@@ -57,13 +57,14 @@ jobs:
              resources = @()
           }
 
-          $rgs = Get-AzResourceGroup | Where-Object { $_.ResourceGroupName -like "${{ env.APP_PREFIX }}*" } | Select-Object ResourceGroupName
+          $rgs = Get-AzResourceGroup | Where-Object { $_.ResourceGroupName -like "${{ env.APP_PREFIX }}*" }
 
           foreach ($rg in $rgs) {
+            $rgName = $rg.ResourceGroupName
 
-            Write-Verbose "Deleting resource group - $rg" -Verbose
+            Write-Verbose "Deleting resource group - $rgName" -Verbose
             New-AzResourceGroupDeployment -Name PurgeResourceGroup `
-                -ResourceGroupName $rg `
+                -ResourceGroupName $rgName `
                 -TemplateObject $emptyARMTemplate `
                 -Mode Complete -AsJob -Force
           }
