@@ -9,6 +9,7 @@ param tags object = {
 // HUB VNET IP SETTINGS
 param bastionSubnetAddressPrefix string = '10.10.0.128/25'  // 123 addresses - 10.10.0.128 - 10.10.0.255
 param desktopSubnetAddressPrefix string = '10.10.1.0/25'    // 123 addresses - 10.10.1.0 - 10.10.1.127
+param buildServerSubnetAddressPrefix string = '10.10.2.0/25'    // 123 addresses - 10.20.3.0 - 10.20.3.127
 
 // SPOKE VNET IP SETTINGS
 param spokeVnetAddressSpace string = '10.20.0.0/20'
@@ -16,9 +17,16 @@ param devopsSubnetAddressPrefix string = '10.20.0.64/26'        // 59 addresses 
 param azServicesSubnetAddressPrefix string = '10.20.1.0/24'     // 251 addresses - 10.20.1.0 - 10.20.1.255
 param integrationSubnetAddressPrefix string = '10.20.2.0/25'    // 123 addresses - 10.20.2.0 - 10.20.2.127
 
+
 // DESKTOP
 param vmAdminUserName string = 'vmadmin'
 param vmAdminPwd string {
+  secure: true
+}
+
+// DevOps Build Server
+param buildServerVmAdminUserName string = 'vmadmin'
+param buildServerVmAdminPwd string {
   secure: true
 }
 
@@ -33,6 +41,12 @@ resource netrg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
 
 resource desktoprg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
   name: '${appPrefix}-desktop'
+  location: region
+  tags: tags
+}
+
+resource buildServerRg 'Microsoft.Resources/resourceGroups@2020-06-01' = {
+  name: '${appPrefix}-build-server'
   location: region
   tags: tags
 }
@@ -83,6 +97,15 @@ module hubVnet 'modules/vnet.bicep' = {
           }
         }
       }
+      {
+        name: 'buildServer'
+        properties: {
+          addressPrefix: buildServerSubnetAddressPrefix
+          networkSecurityGroup: {
+            id: desktopNsg.outputs.id
+          }
+        }
+      }    
     ]
   }
 }
@@ -709,7 +732,7 @@ module hubVnetAzureZoneLink 'modules/dnszonelink.bicep' = {
 }
 
 
-// TODO: THIS IS A HACK - need to find a better way to apply the UDR to the desktop subnet
+// TODO: THIS IS A HACK - need to find a better way to apply the UDR to the desktop and build server subnet
 module applyUdrForDesktop 'modules/vnet.bicep' = {
   name: 'hub-vnet-applyDesktopUDR'
   scope: resourceGroup(netrg.name)
@@ -746,9 +769,22 @@ module applyUdrForDesktop 'modules/vnet.bicep' = {
           }
         }
       }
+      {
+        name: 'buildServer'
+        properties: {
+          addressPrefix: buildServerSubnetAddressPrefix
+          networkSecurityGroup: {
+            id: desktopNsg.outputs.id
+          }
+          routeTable: {
+            id: route.outputs.id
+          }
+        }
+      }      
     ]
   }
 }
+
 
 // Virtual Machine for application access via Bastion
 module vm 'modules/vm-win10.bicep' = {
@@ -764,5 +800,22 @@ module vm 'modules/vm-win10.bicep' = {
     subnetName: 'desktop'
     adminUserName: vmAdminUserName
     adminPassword: vmAdminPwd
+  }
+}
+
+// Azure Devops build server for access via Azure Devops Pipelines
+module virtualMachineScaleSet 'modules/virtualMachineScaleSet.bicep' = {
+  name: 'DevopsBuildServerVMSS'  
+  scope: resourceGroup(buildServerRg.name)
+  dependsOn: [
+    applyUdrForDesktop
+  ]
+  params: {
+    vmssName: 'DevOpsBuildServerVmss'
+    vnetResourceGroupName:  netrg.name
+    vnetName: '${appPrefix}-hub'
+    subnetName: 'buildServer'
+    adminUserName: buildServerVmAdminUserName
+    adminPassword: buildServerVmAdminPwd
   }
 }
