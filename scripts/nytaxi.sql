@@ -143,11 +143,13 @@ WITH
 );
 
 /****** Set DB permissions ******/
+
 CREATE USER [user@youraad.com] FROM EXTERNAL PROVIDER;
 GO
 EXEC sp_addrolemember 'db_datareader', 'user@youraad.com'; 
 GO
 
+IF EXISTS (SELECT * FROM sys.database_principals WHERE name = 'ADF_NAME')
 CREATE USER [ADF_NAME] FROM EXTERNAL PROVIDER;
 GO
 EXEC sp_addrolemember 'db_datareader', 'ADF_NAME'; 
